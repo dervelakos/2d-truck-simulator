@@ -149,6 +149,7 @@ class Truck:
 		painter.translate(int(self.x), int(self.y))
 		painter.rotate(self.angle)
 		# Draw rectangle centered at origin
+		painter.translate(int(self.wheelBase/2),0)
 		painter.drawRect(int(-self.length/2),
 						 int(-self.width/2),
 						 int(self.length),
@@ -164,6 +165,7 @@ class Truck:
 
 		painter.translate(int(self.x), int(self.y))
 		painter.rotate(self.angle)
+		painter.translate(int(self.wheelBase/2),0)
 
 		painter.drawRect(int(self.wheelBaseOffset-(self.wheelBase/2)),
 						 int(-self.axleWidth/2),
@@ -192,6 +194,12 @@ class Truck:
 			Draws the front wheels. Must be called from the rear axle
 			transformation to work correctly.
 		'''
+
+		painter.save()
+		painter.rotate(self.steeringAngle)
+		painter.drawLine(0,-1000,0,1000)
+		painter.restore()
+
 		painter.save()
 		painter.translate(0, -self.wheelTread/2+self.axleWidth/2)
 		painter.rotate(self.steeringAngle)
@@ -217,6 +225,7 @@ class Truck:
 			Draws the rears wheels. Must be called from the rear axle
 			transformation to work correctly.
 		'''
+		painter.drawLine(0,-1000,0,1000)
 
 		painter.drawRect(int(-self.wheelDiameter/2),
 						 int(-self.wheelTread/2),
@@ -234,14 +243,61 @@ class Truck:
 
 		#self.angular_speed * dt
 
-		self.inModel.applyForce(self.linearSpeed * self.throttle * dt *10000,
-								math.radians(self.angle))
+		#self.inModel.applyForce(self.linearSpeed * self.throttle * dt *10000,
+		#						math.radians(self.angle))
 
-		self.inModel.update(dt)
+		#self.inModel.update(dt)
 
-		self.x = self.inModel.x
-		self.y = self.inModel.y
-		print(self.inModel)
+		#self.x = self.inModel.x
+		#self.y = self.inModel.y
+
+		#Instantaneous Center of Rotation
+		old_angle = self.angle
+		if abs(self.steeringAngle) > 0.000001:
+			#no steering
+			rads_steering = math.pi / 2 - math.radians(self.steeringAngle)
+			icr_y = self.wheelBase / math.tan(rads_steering)
+			print("icr_y", icr_y)
+
+			#Imagine vehicle is always at (x,0) or (-x,0)
+			#This would be a perfect turn
+			#rads = math.radians(self.angle)
+			#fx = 0.1 * math.cos(rads_steering) * self.throttle
+			#fy = 0.1 * math.sin(rads_steering) * self.throttle
+
+			fx = 1.5 * math.cos(rads_steering) * self.throttle
+			fy = 1.5 * math.sin(rads_steering) * self.throttle
+			print("f:", fx, fy, self.steeringAngle)
+
+			rx = 0
+			ry = 1.5 * self.throttle
+
+
+
+			if abs(self.throttle) > 0.000001:
+				#diff = math.atan2(fy, abs(icr_y)+fx)
+				diff = math.atan2(fy+self.wheelBase - ry, fx - rx)
+				print(math.degrees(math.pi/ 2 - diff))
+				self.angle += math.degrees(math.pi/ 2 - diff)
+
+				rx = 1.5 * math.cos(diff) * self.throttle
+				ry = 1.5 * math.sin(diff) * self.throttle
+			else:
+				diff = 0
+				rx = 0
+				ry = 0
+
+			#rx = 1.5 * math.cos(diff) * self.throttle
+			#ry = 1.5 * math.sin(diff) * self.throttle
+			print(self.x, self.y, self.angle)
+		else:
+			ry = 1.5 * self.throttle
+			rx = 0
+
+		rads = math.radians(math.pi /2 - old_angle)
+		self.y += rx * math.cos(rads) - ry * math.sin(rads)
+		self.x += rx * math.sin(rads) + ry * math.cos(rads)
+		#print(self.inModel)
 
 		#distance = self.linearSpeed * self.throttle * dt
 		#rad = math.radians(self.angle)
@@ -263,11 +319,11 @@ class Truck:
 class MainWindow(QMainWindow):
 	def __init__(self):
 		super().__init__()
-		self.setGeometry(100, 100, 500, 500)
+		self.setGeometry(100, 100, 800, 800)
 		self.angle = 0	# Initial rotation anglea
 		self.setFocus()  # Enable keyboard focus
 
-		self.truck = Truck([50.0,50.0], [100.0,60.0])
+		self.truck = Truck([50.0,50.0], [130.0,80.0])
 
 		# Create and setup the timer
 		self.timer = QTimer(self)
@@ -296,9 +352,9 @@ class MainWindow(QMainWindow):
 		elif event.key() == Qt.Key_Down:
 			self.truck.setThrottle(-1)
 		elif event.key() == Qt.Key_Left:
-			self.truck.setSteering(self.truck.getSteering()-1/36)
+			self.truck.setSteering(self.truck.getSteering()-1/16)
 		elif event.key() == Qt.Key_Right:
-			self.truck.setSteering(self.truck.getSteering()+1/36)
+			self.truck.setSteering(self.truck.getSteering()+1/16)
 
 	def keyReleaseEvent(self, event):
 		if event.key() == Qt.Key_Up:
