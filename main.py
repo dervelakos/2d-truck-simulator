@@ -163,7 +163,7 @@ class Truck:
 		self.x = float(initial_pos[0]);
 		self.y = float(initial_pos[1]);
 
-		self.inModel = InertialModel1D(mass=100.0, friction=20.0)
+		self.inModel = InertialModel1D(mass=100.0, friction=200.0)
 
 		self.width = float(truck_dimensions[1]);
 		self.length = float(truck_dimensions[0]);
@@ -315,37 +315,48 @@ class Truck:
 		old_angle = self.angle
 		if abs(self.steeringAngle) > 0.000001:
 			#no steering
-			rads_steering = math.pi / 2 - math.radians(self.steeringAngle)
-			#icr_y = self.wheelBase / math.tan(rads_steering)
-			#print("icr_y", icr_y)
+			rads_steering = math.radians(self.steeringAngle)
+			icr_y = self.wheelBase / math.tan(rads_steering)
+			print("icr_y", icr_y)
 
+			#theta_0 = math.atan2(0, icr_y)
+			delta_theta = (self.inModel.getSpeed() * 10000 * dt) / icr_y  # Arc length formula
+
+			rx = (icr_y * math.cos(delta_theta)) - icr_y
+			ry = icr_y * math.sin(delta_theta)
+			print("rx:", rx, ", ry: ",ry,", theta:",delta_theta )
+
+			if abs(self.inModel.getSpeed()) > 0.000001:
+				rads = math.radians(math.pi /2 - self.angle)
+				self.y += rx * math.cos(rads) - ry * math.sin(rads)
+				self.x += rx * math.sin(rads) + ry * math.cos(rads)
+				self.angle += math.degrees(delta_theta)
+				print("angle: ", self.angle, ", delta: ", math.degrees(delta_theta))
 			#Imagine vehicle is always at (x,0) or (-x,0)
 			#This would be a perfect turn
 			#rads = math.radians(self.angle)
 			#fx = 0.1 * math.cos(rads_steering) * self.throttle
 			#fy = 0.1 * math.sin(rads_steering) * self.throttle
 
-			fx = self.inModel.getSpeed() * math.cos(rads_steering)
-			fy = self.inModel.getSpeed() * math.sin(rads_steering)
-			print("f:", fx, fy, self.steeringAngle)
+			#fx = self.inModel.getSpeed() * math.cos(rads_steering)
+			#fy = self.inModel.getSpeed() * math.sin(rads_steering)
+			#print("f:", fx, fy, self.steeringAngle)
 
-			rx = 0
-			ry = 1.5 * self.inModel.getSpeed()
+			#rx = 0
+			#ry = 1.5 * self.inModel.getSpeed()
 
-
-
-			if abs(self.inModel.getSpeed()) > 0.000001:
+			#if abs(self.inModel.getSpeed()) > 0.000001:
 				#diff = math.atan2(fy, abs(icr_y)+fx)
-				diff = math.atan2(fy+self.wheelBase - ry, fx - rx)
-				print(math.degrees(math.pi/ 2 - diff))
-				self.angle += math.degrees(math.pi/ 2 - diff)
+				#diff = math.atan2(fy+self.wheelBase - ry, fx - rx)
+				#print(math.degrees(math.pi/ 2 - diff))
+				#self.angle += math.degrees(math.pi/ 2 - diff)
 
-				rx = 1.5 * math.cos(diff) * self.inModel.getSpeed()
-				ry = 1.5 * math.sin(diff) * self.inModel.getSpeed()
-			else:
-				diff = 0
-				rx = 0
-				ry = 0
+				#rx = 1.5 * math.cos(diff) * self.inModel.getSpeed()
+				#ry = 1.5 * math.sin(diff) * self.inModel.getSpeed()
+			#else:
+				#diff = 0
+				#rx = 0
+				#ry = 0
 
 			#rx = 1.5 * math.cos(diff) * self.throttle
 			#ry = 1.5 * math.sin(diff) * self.throttle
@@ -354,9 +365,9 @@ class Truck:
 			ry = 1.5 * self.inModel.getSpeed()
 			rx = 0
 
-		rads = math.radians(math.pi /2 - self.angle)
-		self.y += rx * math.cos(rads) - ry * math.sin(rads)
-		self.x += rx * math.sin(rads) + ry * math.cos(rads)
+			rads = math.radians(math.pi /2 - self.angle)
+			self.y += rx * math.cos(rads) - ry * math.sin(rads)
+			self.x += rx * math.sin(rads) + ry * math.cos(rads)
 		#print(self.inModel)
 
 		#distance = self.linearSpeed * self.throttle * dt
