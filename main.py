@@ -5,6 +5,66 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QPainter, QColor
 from PyQt5.QtCore import Qt, QTimer
 
+class InertialModel1D:
+	"""
+	A 2D inertial model representing an object with speed, angle, position, and the ability to apply force.
+
+	Attributes:
+		speed (float): Current speed of the object.
+		mass (float): Mass of the object (affects inertia).
+		friction (float): Friction coefficient (reduces speed over time).
+	"""
+
+	def __init__(self, speed=0.0, mass=1.0, friction=0.05):
+		"""
+		Initializes the InertialModel2D.
+
+		Args:
+			speed (float): Initial speed.
+			mass (float): Mass of the object.
+			friction (float): Friction coefficient (0.0 - 1.0, where 0.0 is no friction and 1.0 is high friction).
+		"""
+		self.speed = speed
+		self.mass = mass
+		self.friction = friction
+
+	def applyForce(self, force, force_angle):
+		"""
+		Applies a force to the object, affecting its speed and direction.
+
+		Args:
+			force (float): Magnitude of the force.
+		"""
+		# Calculate acceleration
+		a = force / self.mass
+
+		# Update velocity
+		self.speed += force / self.mass
+
+	def setFriction(self, friction):
+		self.friction = friction
+
+	def update(self, dt=0.1):
+		"""
+		Updates the object's position and speed based on its current state and applied forces.
+		Includes friction to slow down the object over time.
+
+		Args:
+			dt (float): Time step (in seconds).
+		"""
+		# Apply friction
+		self.speed *= (1 - self.friction * dt)
+
+		# Handle very low speed to prevent jittering
+		if self.speed < 0.001 and self.speed > 0.001:
+			self.speed = 0
+
+	def getSpeed(self):
+		return self.speed
+
+	def __str__(self):
+		return f"Speed: {self.speed:.2f}"
+
 class InertialModel2D:
 	"""
 	A 2D inertial model representing an object with speed, angle, position, and the ability to apply force.
@@ -103,7 +163,7 @@ class Truck:
 		self.x = float(initial_pos[0]);
 		self.y = float(initial_pos[1]);
 
-		self.inModel = InertialModel2D(x=self.x, y=self.y, speed=0, angle=0, mass=1.0, friction=20)
+		self.inModel = InertialModel1D(mass=100.0, friction=20.0)
 
 		self.width = float(truck_dimensions[1]);
 		self.length = float(truck_dimensions[0]);
@@ -243,10 +303,10 @@ class Truck:
 
 		#self.angular_speed * dt
 
-		#self.inModel.applyForce(self.linearSpeed * self.throttle * dt *10000,
-		#						math.radians(self.angle))
+		self.inModel.applyForce(self.linearSpeed * self.throttle * dt *10000,
+								math.radians(self.angle))
 
-		#self.inModel.update(dt)
+		self.inModel.update(dt)
 
 		#self.x = self.inModel.x
 		#self.y = self.inModel.y
@@ -256,8 +316,8 @@ class Truck:
 		if abs(self.steeringAngle) > 0.000001:
 			#no steering
 			rads_steering = math.pi / 2 - math.radians(self.steeringAngle)
-			icr_y = self.wheelBase / math.tan(rads_steering)
-			print("icr_y", icr_y)
+			#icr_y = self.wheelBase / math.tan(rads_steering)
+			#print("icr_y", icr_y)
 
 			#Imagine vehicle is always at (x,0) or (-x,0)
 			#This would be a perfect turn
@@ -265,23 +325,23 @@ class Truck:
 			#fx = 0.1 * math.cos(rads_steering) * self.throttle
 			#fy = 0.1 * math.sin(rads_steering) * self.throttle
 
-			fx = 1.5 * math.cos(rads_steering) * self.throttle
-			fy = 1.5 * math.sin(rads_steering) * self.throttle
+			fx = self.inModel.getSpeed() * math.cos(rads_steering)
+			fy = self.inModel.getSpeed() * math.sin(rads_steering)
 			print("f:", fx, fy, self.steeringAngle)
 
 			rx = 0
-			ry = 1.5 * self.throttle
+			ry = 1.5 * self.inModel.getSpeed()
 
 
 
-			if abs(self.throttle) > 0.000001:
+			if abs(self.inModel.getSpeed()) > 0.000001:
 				#diff = math.atan2(fy, abs(icr_y)+fx)
 				diff = math.atan2(fy+self.wheelBase - ry, fx - rx)
 				print(math.degrees(math.pi/ 2 - diff))
 				self.angle += math.degrees(math.pi/ 2 - diff)
 
-				rx = 1.5 * math.cos(diff) * self.throttle
-				ry = 1.5 * math.sin(diff) * self.throttle
+				rx = 1.5 * math.cos(diff) * self.inModel.getSpeed()
+				ry = 1.5 * math.sin(diff) * self.inModel.getSpeed()
 			else:
 				diff = 0
 				rx = 0
@@ -291,10 +351,10 @@ class Truck:
 			#ry = 1.5 * math.sin(diff) * self.throttle
 			print(self.x, self.y, self.angle)
 		else:
-			ry = 1.5 * self.throttle
+			ry = 1.5 * self.inModel.getSpeed()
 			rx = 0
 
-		rads = math.radians(math.pi /2 - old_angle)
+		rads = math.radians(math.pi /2 - self.angle)
 		self.y += rx * math.cos(rads) - ry * math.sin(rads)
 		self.x += rx * math.sin(rads) + ry * math.cos(rads)
 		#print(self.inModel)
