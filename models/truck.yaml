@@ -1,0 +1,8 @@
+width: 80.0
+length: 130.0
+
+mass: 100.0
+friction: 200.0
+
+steeringAngle: 40.0
+wheelDiameter: 20.0
