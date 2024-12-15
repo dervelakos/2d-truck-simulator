@@ -5,11 +5,46 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt, QTimer
 
+import rclpy
+import threading
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+
 from VehicleRender import SimpleVehicleRender
 from Vehicle import Vehicle
 from VehicleImporter import easyImport
 
 DEFAULT_MODEL = "models/truck.yaml"
+
+class TwistSubscriber(Node):
+    def __init__(self, vehicle):
+        super().__init__('twist_subscriber')
+        self.vehicle = vehicle
+        self.subscription = self.create_subscription(
+            Twist,
+            'cmd_vel',  # Topic name
+            self.listener_callback,
+            10)  # QoS
+
+    def listener_callback(self, msg):
+        self.vehicle.setThrottle(msg.linear.x)
+        self.vehicle.setSteering(-msg.angular.z)
+        self.get_logger().info(f'Received twist message: linear={msg.linear.x, msg.linear.y, msg.linear.z}, angular={msg.angular.x, msg.angular.y, msg.angular.z}')
+
+class RosNode:
+    def __init__(self, vehicle):
+        self.node = None
+        self.thread = None
+        self.vehicle = vehicle
+
+    def start(self):
+        self.thread = threading.Thread(target=self.startNode)
+        self.thread.start()
+
+    def startNode(self):
+        rclpy.init()
+        self.node = TwistSubscriber(self.vehicle)
+        rclpy.spin(self.node)
 
 class MainWindow(QMainWindow):
     """
@@ -28,6 +63,9 @@ class MainWindow(QMainWindow):
         self.truck, self.truckRender = easyImport(model)
         self.truck.x = 100.0
         self.truck.y = 100.0
+
+        cmdVel = RosNode(self.truck)
+        cmdVel.start()
 
         # Create and setup the timer
         self.timer = QTimer(self)
