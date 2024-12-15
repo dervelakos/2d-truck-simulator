@@ -2,168 +2,17 @@ import sys
 import math
 import signal
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt, QTimer
 
-class InertialModel1D:
-    """
-    A 2D inertial model representing an object with speed, angle, position, and
-    the ability to apply force.
-
-    Attributes:
-        speed (float): Current speed of the object.
-        mass (float): Mass of the object (affects inertia).
-        friction (float): Friction coefficient (reduces speed over time).
-    """
-
-    def __init__(self, speed=0.0, mass=1.0, friction=0.05):
-        """
-        Initializes the InertialModel2D.
-
-        Args:
-            speed (float): Initial speed.
-            mass (float): Mass of the object.
-            friction (float): Friction coefficient (0.0 - 1.0, where 0.0 is no
-                              friction and 1.0 is high friction).
-        """
-        self.speed = speed
-        self.mass = mass
-        self.friction = friction
-
-    def applyForce(self, force):
-        """
-        Applies a force to the object, affecting its speed and direction.
-
-        Args:
-            force (float): Magnitude of the force.
-        """
-        # Update velocity
-        self.speed += force / self.mass
-
-    def setFriction(self, friction):
-        self.friction = friction
-
-    def update(self, dt=0.1):
-        """
-        Updates the object's position and speed based on its current state and
-        applied forces. Includes friction to slow down the object over time.
-
-        Args:
-            dt (float): Time step (in seconds).
-        """
-        # Apply friction
-        self.speed *= (1 - self.friction * dt)
-
-        # Handle very low speed to prevent jittering
-        if -0.001 < self.speed < 0.001:
-            self.speed = 0
-
-    def getSpeed(self):
-        return self.speed
-
-    def __str__(self):
-        return f"Speed: {self.speed:.2f}"
-
-class InertialModel2D:
-    """
-    A 2D inertial model representing an object with speed, angle, position, and
-    the ability to apply force.
-
-    Attributes:
-        x (float): x-coordinate of the object's position.
-        y (float): y-coordinate of the object's position.
-        speed (float): Current speed of the object.
-        angle (float): Current angle of the object (in radians, 0 = right, pi/2 = up, etc.).
-        mass (float): Mass of the object (affects inertia).
-        friction (float): Friction coefficient (reduces speed over time).
-        vx (float): Velocity in the x-direction.
-        vy (float): Velocity in the y-direction.
-    """
-
-    def __init__(self, x=0.0, y=0.0, speed=0.0, angle=0.0, mass=1.0, friction=0.05):
-        """
-        Initializes the InertialModel2D.
-
-        Args:
-            x (float): Initial x-coordinate.
-            y (float): Initial y-coordinate.
-            speed (float): Initial speed.
-            angle (float): Initial angle (in radians).
-            mass (float): Mass of the object.
-            friction (float): Friction coefficient (0.0 - 1.0, where 0.0 is no
-                              friction and 1.0 is high friction).
-        """
-        self.x = x
-        self.y = y
-        self.speed = speed
-        self.angle = angle
-        self.mass = mass
-        self.friction = friction
-        self.vx = speed * math.cos(angle)
-        self.vy = speed * math.sin(angle)
-
-    def applyForce(self, force, forceAngle):
-        """
-        Applies a force to the object, affecting its speed and direction.
-
-        Args:
-            force (float): Magnitude of the force.
-            force_angle (float): Angle of the force (in radians).
-        """
-        # Resolve force into x and y components
-        fx = force * math.cos(forceAngle)
-        fy = force * math.sin(forceAngle)
-
-        # Calculate acceleration
-        ax = fx / self.mass
-        ay = fy / self.mass
-
-        # Update velocity
-        self.vx += ax
-        self.vy += ay
-
-        # Update speed and angle based on new velocity
-        self.speed = math.sqrt(self.vx**2 + self.vy**2)
-        self.angle = math.atan2(self.vy, self.vx)
-
-    def update(self, dt=0.1):
-        """
-        Updates the object's position and speed based on its current state and applied forces.
-        Includes friction to slow down the object over time.
-
-        Args:
-            dt (float): Time step (in seconds).
-        """
-        # Apply friction
-        self.vx *= (1 - self.friction * dt)
-        self.vy *= (1 - self.friction * dt)
-
-        # Update speed and angle based on new velocity after friction
-        self.speed = math.sqrt(self.vx**2 + self.vy**2)
-
-        # Handle very low speed to prevent jittering
-        if self.speed < 0.001:
-            self.speed = 0
-            self.vx = 0
-            self.vy = 0
-
-        if self.speed != 0: #avoid errors when speed is exactly 0
-            self.angle = math.atan2(self.vy, self.vx)
-
-
-        # Update position
-        self.x += self.vx * dt
-        self.y += self.vy * dt
-
-    def __str__(self):
-        return f"Position: ({self.x:.2f}, {self.y:.2f}), Speed: {self.speed:.2f}, Angle: {math.degrees(self.angle):.2f}°"
+from InertialModels import InertialModel1D
+from VehicleRender import SimpleVehicleRender
 
 class Vehicle:
     """
     A class representing a vehicle.
     """
-    def __init__(self, initialPos, truckDimensions, color=QColor(255,0,0),
-                 axles=None):
+    def __init__(self, initialPos, truckDimensions, axles=None):
         self.x = float(initialPos[0])
         self.y = float(initialPos[1])
 
@@ -180,14 +29,12 @@ class Vehicle:
 
         self.throttle = 0
 
-        self.color = color
         self.speed = 0
 
         self.maxSteeringAngle = 40.0
         self.steeringAngle = 40.0
         self.wheelDiameter = 20.0
 
-        self.axleWidth = 5.0 # For drawing purposes only
         if axles:
             self.wheelBase = axles[0]
             self.wheelThread = axles[1]
@@ -202,120 +49,6 @@ class Vehicle:
 
     def getSteering(self):
         return self.steeringAngle / self.maxSteeringAngle
-
-    def drawVehicle(self, painter):
-        """
-        Draws the truck on the GUI.
-
-        Args:
-            painter (QPainter): the painter to draw with
-        """
-        # Set the color and draw the rectangle
-        painter.save()
-
-        painter.setPen(Qt.black)
-        painter.setBrush(self.color)
-
-        painter.translate(int(self.x), int(self.y))
-        painter.rotate(self.angle)
-        # Draw rectangle centered at origin
-        painter.translate(int(self.wheelBase/2),0)
-        painter.drawRect(int(-self.length/2),
-                         int(-self.width/2),
-                         int(self.length),
-                         int(self.width))
-
-        painter.restore()
-
-    def drawAxles(self, painter, color=Qt.black):
-        """
-        Draws the axles and wheels on the vehicle, this is considered a helper
-        function
-
-        Args:
-            painter (QPainter): the painter to draw with
-            color (float): color of the axles
-        """
-        painter.save()
-
-        painter.setPen(Qt.black)
-        painter.setBrush(color)
-
-        painter.translate(int(self.x), int(self.y))
-        painter.rotate(self.angle)
-        painter.translate(int(self.wheelBase/2),0)
-
-        painter.drawRect(int(self.wheelBaseOffset-(self.wheelBase/2)),
-                         int(-self.axleWidth/2),
-                         int(self.wheelBase),
-                         int(self.axleWidth))
-
-        painter.translate(int(self.wheelBaseOffset+(self.wheelBase/2)),0)
-        painter.drawRect(int(-self.axleWidth/2),
-                         int(-self.wheelTread/2),
-                         int(self.axleWidth),
-                         int(self.wheelTread))
-        self.drawFrontWheels(painter)
-        painter.translate(-self.wheelBase,0)
-
-        #Draw rear axle components
-        painter.drawRect(int(-self.axleWidth/2),
-                         int(-self.wheelTread/2),
-                         int(self.axleWidth),
-                         int(self.wheelTread))
-        self.drawRearWheels(painter)
-
-        painter.restore()
-
-    def drawFrontWheels(self, painter):
-        '''
-            Draws the front wheels. Must be called from the rear axle
-            transformation to work correctly.
-        '''
-
-        painter.save()
-        painter.rotate(self.steeringAngle)
-        painter.drawLine(0,-1000,0,1000)
-        painter.restore()
-
-        painter.save()
-        painter.translate(0, -self.wheelTread/2+self.axleWidth/2)
-        painter.rotate(self.steeringAngle)
-
-        painter.drawRect(int(-self.wheelDiameter/2),
-                         int(-self.axleWidth/2),
-                         int(self.wheelDiameter),
-                         int(self.axleWidth))
-        painter.restore()
-
-        painter.save()
-        painter.translate(0, self.wheelTread/2-self.axleWidth/2)
-        painter.rotate(self.steeringAngle)
-
-        painter.drawRect(int(-self.wheelDiameter/2),
-                         int(-self.axleWidth/2),
-                         int(self.wheelDiameter),
-                         int(self.axleWidth))
-        painter.restore()
-
-    def drawRearWheels(self, painter):
-        '''
-        Draws the rears wheels. Must be called from the rear axle
-        transformation to work correctly.
-        '''
-        painter.drawLine(0,-1000,0,1000)
-
-        painter.drawRect(int(-self.wheelDiameter/2),
-                         int(-self.wheelTread/2),
-                         int(self.wheelDiameter),
-                         int(self.axleWidth))
-
-        painter.drawRect(int(-self.wheelDiameter/2),
-                         int(self.wheelTread/2-self.axleWidth),
-                         int(self.wheelDiameter),
-                         int(self.axleWidth))
-
-        #painter.restore()
 
     def tick(self, dt):
         """
@@ -413,6 +146,7 @@ class MainWindow(QMainWindow):
         self.setFocus()  # Enable keyboard focus
 
         self.truck = Vehicle([50.0,50.0], [130.0,80.0])
+        self.truckRender = SimpleVehicleRender(self.truck)
 
         # Create and setup the timer
         self.timer = QTimer(self)
@@ -431,8 +165,8 @@ class MainWindow(QMainWindow):
         painter.setRenderHint(QPainter.Antialiasing)
 
         self.truck.tick(0.0016)
-        self.truck.drawVehicle(painter)
-        self.truck.drawAxles(painter)
+        self.truckRender.drawVehicle(painter)
+        self.truckRender.drawAxles(painter)
 
         painter.end()
 
