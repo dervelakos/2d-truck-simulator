@@ -1,16 +1,18 @@
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QImage
 from PyQt5.QtCore import Qt
 
 class SimpleVehicleRender:
     """
     A class representing a vehicle.
     """
-    def __init__(self, parent, color=QColor(255,0,0)):
+    def __init__(self, parent, data=None):
         self.parent = parent
-        self.color = color
-        self.axleWidth = 5
+        self.color = QColor(255, 0, 0)
+        self.axleWidth = data["axleWidth"]
+        self.image = QImage(data["image"]).scaled(int(self.parent.length),
+                                                  int(self.parent.width))
 
-    def drawVehicle(self, painter):
+    def drawSquareVehicle(self, painter):
         """
         Draws the truck on the GUI.
 
@@ -33,6 +35,37 @@ class SimpleVehicleRender:
                          int(self.parent.width))
 
         painter.restore()
+
+    def drawImageVehicle(self, painter):
+        """
+        Draws the truck on the GUI.
+
+        Args:
+            painter (QPainter): the painter to draw with
+        """
+        # Set the color and draw the rectangle
+        painter.save()
+
+        painter.setPen(Qt.black)
+        painter.setBrush(self.color)
+
+        painter.translate(int(self.parent.x), int(self.parent.y))
+        painter.rotate(self.parent.angle)
+        # Draw rectangle centered at origin
+        painter.translate(int(self.parent.wheelBase/2),0)
+        painter.drawImage(int(-self.parent.length/2),
+                         int(-self.parent.width/2),
+                         self.image)
+                         #sw=int(self.parent.length),
+                         #sh=int(self.parent.width))
+
+        painter.restore()
+
+    def drawVehicle(self, painter):
+        if self.image:
+            self.drawImageVehicle(painter)
+        else:
+            self.drawSquareVehicle(painter)
 
     def drawAxles(self, painter, color=Qt.black):
         """

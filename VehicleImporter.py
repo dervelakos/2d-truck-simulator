@@ -18,7 +18,8 @@ class VehicleDescription:
 
     def getVehicleRender(self):
         if self.vehicleRender is None:
-            self.vehicleRender = SimpleVehicleRender(self.getVehicle())
+            self.vehicleRender = SimpleVehicleRender(self.getVehicle(),
+                                                     self.data)
         return self.vehicleRender
 
 def easyImport(descriptor):

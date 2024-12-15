@@ -26,6 +26,8 @@ class MainWindow(QMainWindow):
             model = sys.argv[1]
 
         self.truck, self.truckRender = easyImport(model)
+        self.truck.x = 100.0
+        self.truck.y = 100.0
 
         # Create and setup the timer
         self.timer = QTimer(self)

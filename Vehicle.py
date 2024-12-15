@@ -38,8 +38,11 @@ class Vehicle:
             self.wheelBaseOffset = 0.0 #Shifts the wheels forward
 
     def setSteering(self, steering):
+        if steering > 1:
+            steering = 1
+        if steering < -1:
+            steering = -1
         self.steeringAngle = self.maxSteeringAngle * steering
-
     def getSteering(self):
         return self.steeringAngle / self.maxSteeringAngle
 
@@ -103,7 +106,7 @@ class Vehicle:
             #ry = 1.5 * math.sin(diff) * self.throttle
             print(self.x, self.y, self.angle)
         else:
-            ry = 1.5 * self.inModel.getSpeed()
+            ry = self.inModel.getSpeed() * 10000 * dt
             rx = 0
 
             rads = math.radians(math.pi /2 - self.angle)
