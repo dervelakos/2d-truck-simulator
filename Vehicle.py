@@ -129,3 +129,6 @@ class Vehicle:
 
     def setAngle(self, angle):
         self.angle += angle
+
+    def getAngle(self):
+        return self.angle
