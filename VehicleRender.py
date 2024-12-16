@@ -1,6 +1,34 @@
 from PyQt5.QtGui import QColor, QImage
 from PyQt5.QtCore import Qt
 
+class BasicRender:
+    def drawMain(self, painter):
+        pass
+
+class WallRender:
+    def __init__(self, parent, color=QColor(0, 255, 0), image=None):
+        self.parent = parent
+        self.color = color
+
+        self.image = image
+
+    def drawMain(self, painter):
+        painter.save()
+
+        painter.setPen(Qt.black)
+        painter.setBrush(self.color)
+
+        painter.translate(int(self.parent.x), int(self.parent.y))
+        painter.rotate(self.parent.angle)
+
+        # Draw rectangle centered at origin
+        painter.drawRect(int(-self.parent.length/2),
+                         int(-self.parent.width/2),
+                         int(self.parent.length),
+                         int(self.parent.width))
+
+        painter.restore()
+
 class SimpleVehicleRender:
     """
     A class representing a vehicle.
@@ -66,6 +94,9 @@ class SimpleVehicleRender:
             self.drawImageVehicle(painter)
         else:
             self.drawSquareVehicle(painter)
+
+    def drawMain(self, painter):
+        self.drawVehicle(painter)
 
     def drawAxles(self, painter, color=Qt.black):
         """

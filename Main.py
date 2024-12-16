@@ -2,6 +2,7 @@
 import sys
 import signal
 import math
+import datetime
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt, QTimer
@@ -11,11 +12,12 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, Pose
 
-from VehicleRender import SimpleVehicleRender
+from VehicleRender import SimpleVehicleRender, WallRender
+from SceneObjects import Wall
 from Vehicle import Vehicle
 from VehicleImporter import easyImport
 
-DEFAULT_MODEL = "models/truck.yaml"
+DEFAULT_MODEL = "models/car.yaml"
 
 class TwistSubscriber(Node):
     def __init__(self, vehicle, topicPrefix):
@@ -94,9 +96,16 @@ class MainWindow(QMainWindow):
         self.truck, self.truckRender = easyImport(model)
         self.truck.x = 100.0
         self.truck.y = 100.0
+        #self.truck.x = 367.0290
+        #self.truck.y = 187.6614
+        #self.truck.setAngle(-67.3357)
 
         cmdVel = RosNode(self.truck, "vehicle1")
         cmdVel.start()
+
+        wall1 = Wall((400,100), 0)
+        wall2 = Wall((200,400), 90)
+        self.sceneObjects = [WallRender(wall1), WallRender(wall2)]
 
         # Create and setup the timer
         self.timer = QTimer(self)
@@ -117,6 +126,11 @@ class MainWindow(QMainWindow):
         self.truck.tick(0.0016)
         self.truckRender.drawVehicle(painter)
         self.truckRender.drawAxles(painter)
+
+        for obj in self.sceneObjects:
+            obj.drawMain(painter)
+            if self.truck.checkCollision(obj.parent):
+                print(datetime.datetime.now(),": Collision with object")
 
         painter.end()
 
