@@ -13,6 +13,12 @@ class SceneObject:
 
         self.boundOffset = [0.0, 0.0]
 
+    def getCenter(self):
+        rad = math.radians(self.angle)
+        rotatedOffsetX = self.boundOffset[0] * math.cos(rad) - self.boundOffset[1] * math.sin(rad)
+        rotatedOffsetY = self.boundOffset[0] * math.sin(rad) + self.boundOffset[1] * math.cos(rad)
+        return (self.x + rotatedOffsetX, self.y + rotatedOffsetY)
+
     def setAngle(self, angle):
         self.angle += angle
 
@@ -46,7 +52,6 @@ class SceneObject:
 
         # Rotate corners around the center
         rotated_corners = []
-        print(self.boundOffset)
         for corner in corners:
             rotated_x = corner[0] * math.cos(rad) - corner[1] * math.sin(rad)
             rotated_y = corner[0] * math.sin(rad) + corner[1] * math.cos(rad)
@@ -54,10 +59,6 @@ class SceneObject:
                                     rotated_y + self.y + rotatedOffsetY))
 
         return rotated_corners
-
-    def getAxis(self, p1, p2):
-        """Calculates the axis to perform the separating axis test"""
-        return (p2[1]-p1[1], p1[0]-p2[0])
 
     def getAxes(self):
         """
@@ -80,7 +81,10 @@ class SceneObject:
             axis = (-edge[1], edge[0])
             # Normalize the axis
             length = math.sqrt(axis[0]**2 + axis[1]**2)
-            axis = (axis[0] / length, axis[1] / length)
+            if length > 0:
+                axis = (axis[0] / length, axis[1] / length)
+            else:
+                axis = (0,0)
             axes.append(axis)
 
         return axes
@@ -94,20 +98,23 @@ class SceneObject:
 
         return min(dots), max(dots)
 
-    def projectRectangle(rect, axis):
+    def dotProduct(self, v1, v2):
         """
-        Project a rectangle onto a given axis.
-
-        Args:
-            rect (Rectangle): The rectangle to project.
-            axis (tuple): The axis to project onto.
-
-        Returns:
-            tuple: The minimum and maximum values of the projection.
+        Calculates the dot product of two vectors.
         """
-        corners = rect.getCorners()
-        projections = [(corner[0] * axis[0] + corner[1] * axis[1]) for corner in corners]
-        return min(projections), max(projections)
+        return v1[0] * v2[0] + v1[1] * v2[1]
+
+    def getOverlapAmount(self, min1, max1, min2, max2):
+        """
+        Calculates the amount of overlap between two intervals.
+        """
+        # Ensure max > min for both intervals
+        if max1 < min1:
+            min1, max1 = max1, min1
+        if max2 < min2:
+            min2, max2 = max2, min1
+
+        return max(0, min(max1, max2) - max(min1, min2))
 
     def checkCollision(self, sceneObject):
         """
@@ -122,13 +129,12 @@ class SceneObject:
         rect1_corners = self.getCorners()
         rect2_corners = sceneObject.getCorners()
 
-        # Get all potential separating axes
-        axes = [
-            self.getAxis(rect1_corners[0], rect1_corners[1]),
-            self.getAxis(rect1_corners[1], rect1_corners[2]),
-            sceneObject.getAxis(rect2_corners[0], rect2_corners[1]),
-            sceneObject.getAxis(rect2_corners[1], rect2_corners[2]),
-        ]
+        axes1 = self.getAxes()
+        axes2 = sceneObject.getAxes()
+        axes = axes1 + axes2
+
+        minOverlapAmount = float('inf')
+        minOverlapAxis = None
 
         # Iterate through all axes
         for axis in axes:
@@ -137,30 +143,29 @@ class SceneObject:
             min2, max2 = sceneObject.project(axis, rect2_corners)
 
             # If there's a gap between the projections, they are not colliding
-            if max1 < min2 or max2 < min1:
-                return False  # Separating axis found
+            if not (max1 >= min2 and max2 >= min1):
+                return False, (0.0, 0.0)  # Separating axis found
+
+            #Minimum Translation Vector (MTV)
+            overlapAmount = self.getOverlapAmount(min1, max1, min2, max2)
+            if overlapAmount < minOverlapAmount:
+                minOverlapAmount = overlapAmount
+                minOverlapAxis = axis
+
+        center1 = self.getCenter()
+        center2 = sceneObject.getCenter()
+        directionVector = (center2[0] - center1[0], center2[1] - center1[1])
+
+        if self.dotProduct(directionVector, minOverlapAxis) < 0:
+            minOverlapAxis = (-minOverlapAxis[0], -minOverlapAxis[1])
+
+        pushbackVector = (
+            minOverlapAxis[0] * minOverlapAmount,
+            minOverlapAxis[1] * minOverlapAmount,
+        )
 
         # No separating axis found, the rectangles are colliding
-        return True
-
-        # Get all axes to test (from both rectangles)
-        axes1 = self.getAxes()
-        axes2 = sceneObject.getAxes()
-        axes = axes1 + axes2
-
-        # Test each axis
-        for axis in axes:
-            # Project both rectangles onto the axis
-            projection1 = self.projectRectangle(axis)
-            projection2 = sceneObject.projectRectangle(axis)
-
-            # Check for overlap
-            if projection1[1] < projection2[0] or projection2[1] < projection1[0]:
-                # No overlap on this axis, so no collision
-                return False
-
-        # No separating axis found, so the rectangles collide
-        return True
+        return True, pushbackVector
 
     def __str__(self):
         return f"x:{self.x}, y: {self.y}, angle: {self.angle}, width: {self.width}, length: {self.length}"

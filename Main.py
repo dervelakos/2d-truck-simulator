@@ -96,9 +96,6 @@ class MainWindow(QMainWindow):
         self.truck, self.truckRender = easyImport(model)
         self.truck.x = 100.0
         self.truck.y = 100.0
-        #self.truck.x = 367.0290
-        #self.truck.y = 187.6614
-        #self.truck.setAngle(-67.3357)
 
         cmdVel = RosNode(self.truck, "vehicle1")
         cmdVel.start()
@@ -129,8 +126,10 @@ class MainWindow(QMainWindow):
 
         for obj in self.sceneObjects:
             obj.drawMain(painter)
-            if self.truck.checkCollision(obj.parent):
-                print(datetime.datetime.now(),": Collision with object")
+            collision, vector = self.truck.checkCollision(obj.parent)
+            if collision:
+                self.truck.x -= vector[0]
+                self.truck.y -= vector[1]
 
         painter.end()
 

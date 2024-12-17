@@ -144,10 +144,10 @@ class SimpleVehicleRender:
             transformation to work correctly.
         '''
 
-        painter.save()
-        painter.rotate(self.parent.steeringAngle)
-        painter.drawLine(0,-1000,0,1000)
-        painter.restore()
+        #painter.save()
+        #painter.rotate(self.parent.steeringAngle)
+        #painter.drawLine(0,-1000,0,1000)
+        #painter.restore()
 
         painter.save()
         painter.translate(0, -self.parent.wheelTread/2+self.axleWidth/2)
@@ -174,7 +174,7 @@ class SimpleVehicleRender:
         Draws the rears wheels. Must be called from the rear axle
         transformation to work correctly.
         '''
-        painter.drawLine(0,-1000,0,1000)
+        #painter.drawLine(0,-1000,0,1000)
 
         painter.drawRect(int(-self.parent.wheelDiameter/2),
                          int(-self.parent.wheelTread/2),
