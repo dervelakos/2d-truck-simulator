@@ -60,6 +60,13 @@ class SceneObject:
 
         return rotated_corners
 
+    def getAxes1(self):
+        axes = []
+        rads = math.radians(self.angle)
+        axes.append((math.cos(rads), math.sin(radst)))
+        axes.append((-math.sin(rads), math.cos(rads)))
+        return axes
+
     def getAxes(self):
         """
         Get the axes to test for the Separating Axis Theorem (SAT).

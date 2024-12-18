@@ -12,6 +12,7 @@ from VehicleRender import SimpleVehicleRender, WallRender
 from SceneObjects import Wall
 from Vehicle import Vehicle
 from VehicleImporter import easyImport
+from Sensors import Lidar
 
 try:
     from RosNodes import RosNode
@@ -33,6 +34,13 @@ class MainWindow(QMainWindow):
         self.truck, self.truckRender = easyImport(model)
         self.truck.x = 100.0
         self.truck.y = 100.0
+
+        print("Axes")
+        print(self.truck.getAxes())
+        print("Axes1")
+        print(self.truck.getAxes1())
+
+        self.lidar = Lidar()
 
         if useRos:
             cmdVel = RosNode(self.truck, "vehicle1")
@@ -61,6 +69,12 @@ class MainWindow(QMainWindow):
         self.truck.tick(0.0016)
         self.truckRender.drawVehicle(painter)
         self.truckRender.drawAxles(painter)
+
+        scanData = self.lidar.scan(self.truck.x,
+                                   self.truck.y,
+                                   self.truck.angle,
+                                   self.sceneObjects)
+        #print(scanData)
 
         for obj in self.sceneObjects:
             obj.drawMain(painter)
