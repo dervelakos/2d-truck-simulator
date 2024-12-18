@@ -43,8 +43,8 @@ class MainWindow(QMainWindow):
         self.lidar = Lidar()
 
         if useRos:
-            cmdVel = RosNode(self.truck, "vehicle1")
-            cmdVel.start()
+            self.rosNode = RosNode(self.truck, "vehicle1")
+            self.rosNode.start()
 
         wall1 = Wall((400,100), 0)
         wall2 = Wall((200,400), 90)
@@ -66,7 +66,8 @@ class MainWindow(QMainWindow):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        self.truck.tick(0.0016)
+        dt = 0.0016
+        self.truck.tick(dt)
         self.truckRender.drawVehicle(painter)
         self.truckRender.drawAxles(painter)
 
@@ -74,7 +75,10 @@ class MainWindow(QMainWindow):
                                    self.truck.y,
                                    self.truck.angle,
                                    self.sceneObjects)
-        #print(scanData)
+
+        print(scanData)
+        scaledData = [x / 100 for x in scanData]
+        self.rosNode.node.publishLidar(scaledData, self.lidar, self.truck.angle, dt)
 
         for obj in self.sceneObjects:
             obj.drawMain(painter)
