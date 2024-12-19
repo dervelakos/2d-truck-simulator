@@ -67,6 +67,16 @@ class SceneObject:
         axes.append((-math.sin(rads), math.cos(rads)))
         return axes
 
+    def getAxis(self, p1, p2):
+        edge = (p2[0] - p1[0], p2[1] - p1[1])
+        axis = (-edge[1], edge[0])
+        length = math.sqrt(axis[0]**2 + axis[1]**2)
+        if length > 0:
+            axis = (axis[0] / length, axis[1] / length)
+        else:
+            axis = (0,0)
+        return axis
+
     def getAxes(self):
         """
         Get the axes to test for the Separating Axis Theorem (SAT).
