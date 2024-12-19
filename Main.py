@@ -48,7 +48,22 @@ class MainWindow(QMainWindow):
 
         wall1 = Wall((400,100), 0)
         wall2 = Wall((200,400), 90)
-        self.sceneObjects = [WallRender(wall1), WallRender(wall2)]
+        wall3 = Wall((400,0), 90)
+        wall3.width = 800
+        wall4 = Wall((400,800), 90)
+        wall4.width = 800
+        wall5 = Wall((0,400), 0)
+        wall5.width = 800
+        wall6 = Wall((800,400), 0)
+        wall6.width = 800
+        self.sceneObjects = [
+                WallRender(wall1),
+                WallRender(wall2),
+                WallRender(wall3),
+                WallRender(wall4),
+                WallRender(wall5),
+                WallRender(wall6)
+        ]
 
         # Create and setup the timer
         self.timer = QTimer(self)

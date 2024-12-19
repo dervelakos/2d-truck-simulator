@@ -59,9 +59,9 @@ class TwistSubscriber(Node):
         #msg.header.stamp.nanosec = 0
         msg.header.frame_id = "base_link"
 
-        msg.angle_min = math.radians(angle)
-        msg.angle_max = math.radians(angle + lidar.numRays * lidar.rayAngleIncrement)
-        msg.angle_increment = math.radians(lidar.rayAngleIncrement)
+        msg.angle_min = math.radians(0)
+        msg.angle_max = math.radians(lidar.numRays * lidar.rayAngleIncrement)
+        msg.angle_increment = math.radians(-lidar.rayAngleIncrement)
 
         msg.time_increment = 0.0
         msg.scan_time = scanTime

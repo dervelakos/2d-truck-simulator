@@ -1,5 +1,24 @@
 import math
 
+def line_line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
+    # Line-line intersection formula
+    denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    if denom == 0:
+        return None  # Lines are parallel or coincident
+
+    t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom
+    u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom
+
+    if 0 <= t <= 1 and 0 <= u <= 1:
+        intersection_x = x1 + t * (x2 - x1)
+        intersection_y = y1 + t * (y2 - y1)
+        return (intersection_x, intersection_y)
+
+    return None
+
+def distance_between_points(x1, y1, x2, y2):
+    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
 def project_ray(ray_origin, ray_direction, axis):
     """Project a ray onto an axis."""
     # Normalize the ray direction
@@ -22,66 +41,36 @@ def project_ray(ray_origin, ray_direction, axis):
 
 def calculateIntersection(x, y, dirX, dirY, obj):
     corners = obj.getCorners()
-    #Single axis for lidar
-    axes = [obj.getAxis((x, y), (x+dirX, y+dirY))]
-    lidarCorner = [(x,y)]
+    lidar_end = (x + dirX, y + dirY)
 
-    for axis in axes:
-        min1, max1 = obj.project(axis, corners)
-        min2, max2 = obj.project(axis, lidarCorner)
-        #print(min1,max1,min2,max2,axis)
-        #min2, max2 = project_ray((x, y), (dirX, dirY), (axisX, axisY))
-        #min2 = (x * axis[0] + y * axis[1])
-        #max2 = (x + 400000 * dirX) * axis[0] + (y + 400000 * dirY) * axis[1]
-        #ray_proj_min, ray_proj_max = project(x, y, dirX, dirY, corners)
-        #rect_proj_min, rect_proj_max = float('inf'), float('-inf')
-        #Ray
-        #min1, max1 = obj.project(axis, [(x, y)])
-        #Rect
-        #min2, max2 = obj.project(axis, [(x, y)])
+    min_distance = float('inf')
+    collision_point = None
+    #axis1 = (-axis[1], axis[0])
 
-        #for corner_x, corner_y in corners:
-         #   proj = corner_x * axisX + corner_y * axisY
-          #  rect_proj_min = min(rect_proj_min, proj)
-           # rect_proj_max = max(rect_proj_max, proj)
+    for i in range(4):
+        edge_start = corners[i]
+        edge_end = corners[(i + 1) % 4]
 
-        #if ray_proj_max < rect_proj_min or ray_proj_min > rect_proj_max:
-        #    return None, None
+        #edgeX = end[0] - start[0]
+        #edgeY = end[1] - start[1]
 
-        # Check if the projections overlap
-        if max1 < min2 or min1 > max2:
-            return None
+        intersection = line_line_intersection(
+            x, y,
+            lidar_end[0], lidar_end[1],
+            edge_start[0], edge_start[1],
+            edge_end[0], edge_end[1]
+        )
 
-        min_distance = float('inf')
-        axis1 = (-axis[1], axis[0])
+        if intersection:
+            dist = distance_between_points(x, y, intersection[0], intersection[1])
+            if dist < min_distance and dist <= 1000: #maxLen
+                min_distance = dist
+                collision_point = intersection
 
-        #This should be projected to the perpendicular axis to find distance
-        for corner in corners:
-            min1, max1 = obj.project(axis1, corners)
-            min2, max2 = obj.project(axis1, lidarCorner)
-            print(min1, max1, min2, max2)
-            distance = abs(min(min1 - min2, max1 - min2))
-            #distance = math.sqrt((corner[0] - x) ** 2 + (corner[1] - y) ** 2)
-            if distance < min_distance:
-                min_distance = distance
+    if collision_point:
         return min_distance
-
-
-    try:
-        return (100,100)
-        hitX, hitY = project(x, y, dirX, dirY, corners)
-        #hitX, hitY = obj.project((dirX, dirY), corners)
-        return hitX, hitY
-    except ZeroDivisionError:
-        return None, None
-
-def project(x, y, dirX, dirY, corners):
-    min_proj, max_proj = float('inf'), float('-inf')
-    for corner_x, corner_y in corners:
-            proj = corner_x * dirX + corner_y * dirY
-            min_proj = min(min_proj, proj)
-            max_proj = max(max_proj, proj)
-    return min_proj, max_proj
+    else:
+        return None
 
 class Lidar:
     def __init__(self, numRays=360, rayAngleIncrement=1):
@@ -94,8 +83,8 @@ class Lidar:
             rayAngleRad = math.radians(angle + i * self.rayAngleIncrement)
 
             #Ray Direction
-            dirX = math.cos(rayAngleRad)
-            dirY = math.sin(rayAngleRad)
+            dirX = math.cos(rayAngleRad) * 1000
+            dirY = math.sin(rayAngleRad) * 1000
 
             closestDist = float('inf')
             #closestObject = None
