@@ -22,13 +22,17 @@ def project_ray(ray_origin, ray_direction, axis):
 
 def calculateIntersection(x, y, dirX, dirY, obj):
     corners = obj.getCorners()
-    axes = obj.getAxes()
+    #Single axis for lidar
+    axes = [obj.getAxis((x, y), (x+dirX, y+dirY))]
+    lidarCorner = [(x,y)]
 
     for axis in axes:
         min1, max1 = obj.project(axis, corners)
+        min2, max2 = obj.project(axis, lidarCorner)
+        #print(min1,max1,min2,max2,axis)
         #min2, max2 = project_ray((x, y), (dirX, dirY), (axisX, axisY))
-        min2 = (x * axis[0] + y * axis[1])
-        max2 = (x + 400000 * dirX) * axis[0] + (y + 400000 * dirY) * axis[1]
+        #min2 = (x * axis[0] + y * axis[1])
+        #max2 = (x + 400000 * dirX) * axis[0] + (y + 400000 * dirY) * axis[1]
         #ray_proj_min, ray_proj_max = project(x, y, dirX, dirY, corners)
         #rect_proj_min, rect_proj_max = float('inf'), float('-inf')
         #Ray
@@ -48,11 +52,16 @@ def calculateIntersection(x, y, dirX, dirY, obj):
         if max1 < min2 or min1 > max2:
             return None
 
-        corners = obj.getCorners()
         min_distance = float('inf')
+        axis1 = (-axis[1], axis[0])
 
+        #This should be projected to the perpendicular axis to find distance
         for corner in corners:
-            distance = math.sqrt((corner[0] - x) ** 2 + (corner[1] - y) ** 2)
+            min1, max1 = obj.project(axis1, corners)
+            min2, max2 = obj.project(axis1, lidarCorner)
+            print(min1, max1, min2, max2)
+            distance = abs(min(min1 - min2, max1 - min2))
+            #distance = math.sqrt((corner[0] - x) ** 2 + (corner[1] - y) ** 2)
             if distance < min_distance:
                 min_distance = distance
         return min_distance
