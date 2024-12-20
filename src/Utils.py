@@ -14,6 +14,9 @@ class Vector2D:
     def __mul__(self, scalar):
         return Vector2D(self.x * scalar, self.y * scalar)
 
+    def __rmul__(self, scalar):
+        return self.__mul__(scalar)
+
     def dot(self, other):
         return self.x * other.x + self.y * other.y
 
@@ -29,3 +32,12 @@ class Vector2D:
 
     def __neg__(self):
         return Vector2D(-self.x, -self.y)
+
+    def __eq__(self, other):
+        if not isinstance(other, Vector2D):
+            return False
+        return (round(self.x, 13) == round(other.x, 13) and
+               round(self.y, 13) == round(other.y, 13))
+
+    def __str__(self):
+        return f"({self.x}, {self.y})"
