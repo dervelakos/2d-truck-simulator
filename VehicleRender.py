@@ -18,7 +18,7 @@ class WallRender:
         painter.setPen(Qt.black)
         painter.setBrush(self.color)
 
-        painter.translate(int(self.parent.x), int(self.parent.y))
+        painter.translate(int(self.parent.pos.x), int(self.parent.pos.y))
         painter.rotate(self.parent.angle)
 
         # Draw rectangle centered at origin
@@ -53,7 +53,7 @@ class SimpleVehicleRender:
         painter.setPen(Qt.black)
         painter.setBrush(self.color)
 
-        painter.translate(int(self.parent.x), int(self.parent.y))
+        painter.translate(int(self.parent.pos.x), int(self.parent.pos.y))
         painter.rotate(self.parent.angle)
         # Draw rectangle centered at origin
         painter.translate(int(self.parent.wheelBase/2),0)
@@ -77,7 +77,7 @@ class SimpleVehicleRender:
         painter.setPen(Qt.black)
         painter.setBrush(self.color)
 
-        painter.translate(int(self.parent.x), int(self.parent.y))
+        painter.translate(int(self.parent.pos.x), int(self.parent.pos.y))
         painter.rotate(self.parent.angle)
         # Draw rectangle centered at origin
         painter.translate(int(self.parent.wheelBase/2),0)
@@ -112,7 +112,7 @@ class SimpleVehicleRender:
         painter.setPen(Qt.black)
         painter.setBrush(color)
 
-        painter.translate(int(self.parent.x), int(self.parent.y))
+        painter.translate(int(self.parent.pos.x), int(self.parent.pos.y))
         painter.rotate(self.parent.angle)
         painter.translate(int(self.parent.wheelBase/2),0)
 

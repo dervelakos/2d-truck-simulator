@@ -13,6 +13,7 @@ from SceneObjects import Wall
 from Vehicle import Vehicle
 from VehicleImporter import easyImport
 from Sensors import Lidar
+from Utils import Vector2D
 
 try:
     from RosNodes import RosNode
@@ -32,8 +33,7 @@ class MainWindow(QMainWindow):
         self.setFocus()  # Enable keyboard focus
 
         self.truck, self.truckRender = easyImport(model)
-        self.truck.x = 100.0
-        self.truck.y = 100.0
+        self.truck.pos = Vector2D(100, 100)
 
         print("Axes")
         print(self.truck.getAxes())
@@ -86,12 +86,12 @@ class MainWindow(QMainWindow):
         self.truckRender.drawVehicle(painter)
         self.truckRender.drawAxles(painter)
 
-        scanData = self.lidar.scan(self.truck.x,
-                                   self.truck.y,
+        scanData = self.lidar.scan(self.truck.pos.x,
+                                   self.truck.pos.y,
                                    self.truck.angle,
                                    self.sceneObjects)
 
-        print(scanData)
+        #print(scanData)
         scaledData = [x / 100 for x in scanData]
         self.rosNode.node.publishLidar(scaledData, self.lidar, self.truck.angle, dt)
 
@@ -99,8 +99,7 @@ class MainWindow(QMainWindow):
             obj.drawMain(painter)
             collision, vector = self.truck.checkCollision(obj.parent)
             if collision:
-                self.truck.x -= vector[0]
-                self.truck.y -= vector[1]
+                self.truck.pos -= Vector2D(vector[0], vector[1])
 
         painter.end()
 

@@ -2,6 +2,7 @@ import math
 
 from SceneObjects import SceneObject
 from InertialModels import InertialModel1D
+from Utils import Vector2D
 
 class Vehicle(SceneObject):
     """
@@ -35,7 +36,8 @@ class Vehicle(SceneObject):
             self.wheelTread = self.width
             self.wheelBaseOffset = 0.0 #Shifts the wheels forward
 
-        self.boundOffset = [self.wheelBase/2, 0]
+        #self.boundOffset = [self.wheelBase/2, 0]
+        self.boundOffset = Vector2D(self.wheelBase/2, 0)
 
     def setSteering(self, steering):
         if steering > 1:
@@ -63,63 +65,26 @@ class Vehicle(SceneObject):
             icr_y = self.wheelBase / math.tan(rads_steering)
             #print("icr_y", icr_y)
 
-            #theta_0 = math.atan2(0, icr_y)
             delta_theta = (self.inModel.getSpeed() * 100 * dt) / icr_y  # Arc length formula
 
             rx = (icr_y * math.cos(delta_theta)) - icr_y
             ry = icr_y * math.sin(delta_theta)
-            #print("rx:", rx, ", ry: ",ry,", theta:",delta_theta )
 
             if abs(self.inModel.getSpeed()) > 0.000001:
                 rads = math.radians(math.pi /2 - self.angle)
-                self.y += rx * math.cos(rads) - ry * math.sin(rads)
-                self.x += rx * math.sin(rads) + ry * math.cos(rads)
+                self.pos.y += rx * math.cos(rads) - ry * math.sin(rads)
+                self.pos.x += rx * math.sin(rads) + ry * math.cos(rads)
+                #self.pos += Vector2D(rx, ry).rotate(rads)
                 self.angle += math.degrees(delta_theta)
-                #print("angle: ", self.angle, ", delta: ", math.degrees(delta_theta))
-            #Imagine vehicle is always at (x,0) or (-x,0)
-            #This would be a perfect turn
-            #rads = math.radians(self.angle)
-            #fx = 0.1 * math.cos(rads_steering) * self.throttle
-            #fy = 0.1 * math.sin(rads_steering) * self.throttle
 
-            #fx = self.inModel.getSpeed() * math.cos(rads_steering)
-            #fy = self.inModel.getSpeed() * math.sin(rads_steering)
-            #print("f:", fx, fy, self.steeringAngle)
-
-            #rx = 0
-            #ry = 1.5 * self.inModel.getSpeed()
-
-            #if abs(self.inModel.getSpeed()) > 0.000001:
-                #diff = math.atan2(fy, abs(icr_y)+fx)
-                #diff = math.atan2(fy+self.wheelBase - ry, fx - rx)
-                #print(math.degrees(math.pi/ 2 - diff))
-                #self.angle += math.degrees(math.pi/ 2 - diff)
-
-                #rx = 1.5 * math.cos(diff) * self.inModel.getSpeed()
-                #ry = 1.5 * math.sin(diff) * self.inModel.getSpeed()
-            #else:
-                #diff = 0
-                #rx = 0
-                #ry = 0
-
-            #rx = 1.5 * math.cos(diff) * self.throttle
-            #ry = 1.5 * math.sin(diff) * self.throttle
-            #print(self.x, self.y, self.angle)
         else:
             ry = self.inModel.getSpeed() * 100 * dt
             rx = 0
 
             rads = math.radians(math.pi /2 - self.angle)
-            self.y += rx * math.cos(rads) - ry * math.sin(rads)
-            self.x += rx * math.sin(rads) + ry * math.cos(rads)
-        #print(self.inModel)
-
-        #distance = self.linearSpeed * self.throttle * dt
-        #rad = math.radians(self.angle)
-        #delta_x = distance * math.cos(rad)
-        #delta_y = distance * math.sin(rad)
-        #self.x += delta_x
-        #self.y += delta_y
+            self.pos.y += rx * math.cos(rads) - ry * math.sin(rads)
+            self.pos.x += rx * math.sin(rads) + ry * math.cos(rads)
+            #self.pos += Vector2D(rx, ry).rotate(rads)
 
     def getSpeed(self):
         return self.inModel.getSpeed()

@@ -39,8 +39,8 @@ class TwistSubscriber(Node):
 
     def publishPose(self):
         msg = Pose()
-        msg.position.x = self.vehicle.x
-        msg.position.y = self.vehicle.y
+        msg.position.x = self.vehicle.pos.x
+        msg.position.y = self.vehicle.pos.y
         msg.position.z = float(0)
 
         q = self.generateQuaternion()

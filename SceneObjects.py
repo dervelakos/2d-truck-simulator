@@ -1,23 +1,22 @@
 import math
 
+from Utils import Vector2D
+
 class SceneObject:
     def __init__(self, initialPos, rotation):
-        self.x = float(initialPos[0])
-        self.y = float(initialPos[1])
 
+        self.pos = Vector2D(initialPos[0], initialPos[1])
         self.angle = rotation
 
         #We support only rectanglular objects :P
         self.width = 0.0
         self.length = 0.0
 
-        self.boundOffset = [0.0, 0.0]
+        self.boundOffset = Vector2D(0.0, 0.0)
 
     def getCenter(self):
         rad = math.radians(self.angle)
-        rotatedOffsetX = self.boundOffset[0] * math.cos(rad) - self.boundOffset[1] * math.sin(rad)
-        rotatedOffsetY = self.boundOffset[0] * math.sin(rad) + self.boundOffset[1] * math.cos(rad)
-        return (self.x + rotatedOffsetX, self.y + rotatedOffsetY)
+        return self.pos + self.boundOffset.rotate(rad)
 
     def setAngle(self, angle):
         self.angle += angle
@@ -36,7 +35,6 @@ class SceneObject:
         half_width = self.width / 2
         half_length = self.length / 2
 
-
         # Corners relative to the center (before rotation)
         corners = [
             (-half_length, -half_width),  # Bottom-left
@@ -47,16 +45,16 @@ class SceneObject:
 
         # Convert angle from degrees to radians
         rad = math.radians(self.angle)
-        rotatedOffsetX = self.boundOffset[0] * math.cos(rad) - self.boundOffset[1] * math.sin(rad)
-        rotatedOffsetY = self.boundOffset[0] * math.sin(rad) + self.boundOffset[1] * math.cos(rad)
+        rotatedOffsetX, rotatedOffsetY = self.boundOffset.rotate(rad).extract()
 
+        print(self.pos)
         # Rotate corners around the center
         rotated_corners = []
         for corner in corners:
             rotated_x = corner[0] * math.cos(rad) - corner[1] * math.sin(rad)
             rotated_y = corner[0] * math.sin(rad) + corner[1] * math.cos(rad)
-            rotated_corners.append((rotated_x + self.x + rotatedOffsetX,
-                                    rotated_y + self.y + rotatedOffsetY))
+            rotated_corners.append((rotated_x + self.pos.x + rotatedOffsetX,
+                                    rotated_y + self.pos.y + rotatedOffsetY))
 
         return rotated_corners
 
@@ -167,22 +165,20 @@ class SceneObject:
             overlapAmount = self.getOverlapAmount(min1, max1, min2, max2)
             if overlapAmount < minOverlapAmount:
                 minOverlapAmount = overlapAmount
-                minOverlapAxis = axis
+                #minOverlapAxis = axis
+                minOverlapAxis = Vector2D(axis[0], axis[1])
 
         center1 = self.getCenter()
         center2 = sceneObject.getCenter()
-        directionVector = (center2[0] - center1[0], center2[1] - center1[1])
+        directionVector = center2 - center1
 
-        if self.dotProduct(directionVector, minOverlapAxis) < 0:
-            minOverlapAxis = (-minOverlapAxis[0], -minOverlapAxis[1])
+        #if self.dotProduct(directionVector, minOverlapAxis) < 0:
+        if directionVector.dot(minOverlapAxis) < 0:
+            minOverlapAxis = -minOverlapAxis
 
-        pushbackVector = (
-            minOverlapAxis[0] * minOverlapAmount,
-            minOverlapAxis[1] * minOverlapAmount,
-        )
-
-        # No separating axis found, the rectangles are colliding
-        return True, pushbackVector
+        # No separating axis found, the rectangles are colliding, return
+        # a pushback vector that resolves the collision
+        return True, (minOverlapAxis * minOverlapAmount).extract()
 
     def __str__(self):
         return f"x:{self.x}, y: {self.y}, angle: {self.angle}, width: {self.width}, length: {self.length}"
