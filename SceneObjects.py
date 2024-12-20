@@ -47,7 +47,6 @@ class SceneObject:
         rad = math.radians(self.angle)
         rotatedOffsetX, rotatedOffsetY = self.boundOffset.rotate(rad).extract()
 
-        print(self.pos)
         # Rotate corners around the center
         rotated_corners = []
         for corner in corners:

@@ -45,6 +45,8 @@ class MainWindow(QMainWindow):
         if useRos:
             self.rosNode = RosNode(self.truck, "vehicle1")
             self.rosNode.start()
+        else:
+            self.rosNode = None
 
         wall1 = Wall((400,100), 0)
         wall2 = Wall((200,400), 90)
@@ -92,8 +94,9 @@ class MainWindow(QMainWindow):
                                    self.sceneObjects)
 
         #print(scanData)
-        scaledData = [x / 100 for x in scanData]
-        self.rosNode.node.publishLidar(scaledData, self.lidar, self.truck.angle, dt)
+        if self.rosNode:
+            scaledData = [x / 100 for x in scanData]
+            self.rosNode.node.publishLidar(scaledData, self.lidar, self.truck.angle, dt)
 
         for obj in self.sceneObjects:
             obj.drawMain(painter)
