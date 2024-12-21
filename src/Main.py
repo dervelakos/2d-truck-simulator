@@ -4,17 +4,17 @@ import signal
 import math
 import datetime
 import argparse
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtGui import QPainter
-from PyQt5.QtCore import Qt, QTimer
 
-from VehicleRender import SimpleVehicleRender, WallRender
+from PyQt5.QtWidgets import QApplication
+
+from VehicleRender import SimpleVehicleRender, RectangleRender
 from SceneObjects import Wall
 from Vehicle import Vehicle
 from VehicleImporter import easyImport
 from Sensors import Lidar
 from Utils import Vector2D
-from SimEngine import SimEngine, RenderEngine
+from SimEngine import SimEngine
+from GraphicalWindow import MainWindow
 
 try:
     from RosNodes import RosNode
@@ -23,116 +23,18 @@ except ImportError as e:
 
 DEFAULT_MODEL = "models/car.yaml"
 
-class MainWindow(QMainWindow):
-    """
-    The GUI window for displaying the simualtor state
-    """
-    def __init__(self, model, useRos=False):
-        super().__init__()
-        self.setGeometry(100, 100, 800, 800)
-        self.angle = 0  # Initial rotation anglea
-        self.setFocus()  # Enable keyboard focus
-
-        self.truck, self.truckRender = easyImport(model)
-        self.truck.pos = Vector2D(100, 100)
-
-        self.simEngine = SimEngine()
-        self.renderEngine = RenderEngine()
-        self.simEngine.registerDynamicObject(self.truck)
-        self.renderEngine.registerVehicle(self.truckRender)
-
-        self.lidar = Lidar()
-
-        if useRos:
-            self.rosNode = RosNode(self.truck, "vehicle1")
-            self.rosNode.start()
-        else:
-            self.rosNode = None
-
-        wall1 = Wall((400,100), 0)
-        self.simEngine.registerStaticObject(wall1)
-        self.renderEngine.registerObject(WallRender(wall1))
-        wall2 = Wall((200,400), 90)
-        self.simEngine.registerStaticObject(wall2)
-        self.renderEngine.registerObject(WallRender(wall2))
-
-        wall3 = Wall((400,0), 90, [800,10])
-        self.simEngine.registerStaticObject(wall3)
-        self.renderEngine.registerObject(WallRender(wall3))
-        wall4 = Wall((400,800), 90, [800,10])
-        self.simEngine.registerStaticObject(wall4)
-        self.renderEngine.registerObject(WallRender(wall4))
-        wall5 = Wall((0,400), 0, [800,10])
-        self.simEngine.registerStaticObject(wall5)
-        self.renderEngine.registerObject(WallRender(wall5))
-        wall6 = Wall((800,400), 0, [800,10])
-        self.simEngine.registerStaticObject(wall6)
-        self.renderEngine.registerObject(WallRender(wall6))
-
-        # Create and setup the timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.updateRotation)
-        self.timer.start(16)  # 16ms = ~60 FPS
-
-    def updateRotation(self):
-        self.update()    # Request repaint
-
-    def paintEvent(self, event):
-        """
-        Main drawing function for the GUI
-        """
-        # pylint: disable=unused-argument
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-
-        dt = 0.0016
-
-        self.simEngine.tickEngine(dt)
-        self.renderEngine.draw(painter)
-
-        scanData = self.lidar.scan(self.truck.pos.x,
-                                   self.truck.pos.y,
-                                   self.truck.angle,
-                                   self.simEngine.getAllObjects(),
-                                   [self.truck])
-
-        if self.rosNode:
-            scaledData = [x / 100 for x in scanData]
-            self.rosNode.node.publishLidar(scaledData, self.lidar, self.truck.angle, dt)
-
-        painter.end()
-
-    def keyPressEvent(self, event):
-        """
-        Handle GUI input events
-        """
-        if event.key() == Qt.Key_Up:
-            self.truck.setThrottle(1)
-        elif event.key() == Qt.Key_Down:
-            self.truck.setThrottle(-1)
-        elif event.key() == Qt.Key_Left:
-            self.truck.setSteering(self.truck.getSteering()-1/16)
-        elif event.key() == Qt.Key_Right:
-            self.truck.setSteering(self.truck.getSteering()+1/16)
-
-    def keyReleaseEvent(self, event):
-        """
-        Handle GUI input events
-        """
-        if event.key() == Qt.Key_Up:
-            self.truck.setThrottle(0)
-        elif event.key() == Qt.Key_Down:
-            self.truck.setThrottle(0)
-        elif event.key() == Qt.Key_Left:
-            self.truck.setAngle(0)
-        elif event.key() == Qt.Key_Right:
-            self.truck.setAngle(0)
+simEngine = None
+lidar = None
+rosNode = None
 
 # Define a signal handler function
 def handleSigint(signalReceived, frame):
     # pylint: disable=unused-argument
     print("Ctrl+C pressed. Exiting the application...")
     QApplication.quit()  # Gracefully quit the application
+
+    simEngine.stop()
+    lidar.stop()
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, handleSigint)
@@ -144,12 +46,50 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    #Create Vehicle
+    truck, truckRender = easyImport(args.model)
+    truck.pos = Vector2D(100, 100)
+
     if args.graphics:
         app = QApplication(sys.argv)
-        window = MainWindow(args.model, args.ros)
+        window = MainWindow(truck)
+
+    #Simulation Engine
+    simEngine = SimEngine()
+    simEngine.registerDynamicObject(truck)
+    if args.graphics:
+        window.getRenderEngine().registerVehicle(truckRender)
+
+    if args.ros:
+        rosNode = RosNode(truck, "vehicle1")
+    #Lidar
+    lidar = Lidar(simEngine, truck, rosNode=rosNode)
+
+    #TODO: I need a scanario loader
+    walls = []
+    walls.append(Wall((400,100), 0))
+    walls.append(Wall((200,400), 90))
+
+    walls.append(Wall((400,0), 90, [800,10]))
+    walls.append(Wall((400,800), 90, [800,10]))
+    walls.append(Wall((0,400), 0, [800,10]))
+    walls.append(Wall((800,400), 0, [800,10]))
+
+    for wall in walls:
+        simEngine.registerStaticObject(wall)
+        if args.graphics:
+            window.getRenderEngine().registerObject(RectangleRender(wall))
+
+    simEngine.startThreaded()
+    if rosNode:
+        rosNode.start()
+    lidar.startThreaded()
+
+    if args.graphics:
         window.show()
         sys.exit(app.exec_())
-    else:
-        print("Not implemented yet.")
 
+    #Terminate
+    lidar.wait()
+    simEngine.wait()
 

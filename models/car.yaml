@@ -2,7 +2,7 @@ width: 80.0
 length: 150.0
 
 mass: 20.0
-friction: 40.0
+friction: 25.0
 
 steeringAngle: 30.0
 wheelDiameter: 20.0

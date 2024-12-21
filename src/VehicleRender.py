@@ -5,7 +5,7 @@ class BasicRender:
     def drawMain(self, painter):
         pass
 
-class WallRender:
+class RectangleRender:
     def __init__(self, parent, color=QColor(0, 255, 0), image=None):
         self.parent = parent
         self.color = color

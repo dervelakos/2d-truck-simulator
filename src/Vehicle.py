@@ -55,7 +55,7 @@ class Vehicle(SceneObject):
         Args:
             dt (float): time difference from the last step in milliseconds.
         """
-        self.inModel.applyForce(self.throttle * dt * 30000)
+        self.inModel.applyForce(self.throttle * dt * 5000)
         self.inModel.update(dt)
 
         #Instantaneous Center of Rotation

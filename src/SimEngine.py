@@ -1,8 +1,16 @@
+import threading
+import time
+
 from Utils import Vector2D
+
 class SimEngine:
-    def __init__(self):
+    def __init__(self, interval=1.0/60):
         self.staticObjects = []
         self.dynamicObjects = []
+
+        self.thread = None
+        self.interval = interval
+        self.running = False
 
     def registerStaticObject(self, obj):
         self.staticObjects.append(obj)
@@ -29,6 +37,22 @@ class SimEngine:
 
     def getAllObjects(self):
         return self.staticObjects + self.dynamicObjects
+
+    def run(self):
+        while self.running:
+            self.tickEngine(self.interval)
+            time.sleep(self.interval)
+
+    def stop(self):
+        self.running = False
+
+    def wait(self):
+        self.thread.join()
+
+    def startThreaded(self):
+        self.running = True
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
 
 class RenderEngine:
     def __init__(self):
