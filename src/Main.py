@@ -14,6 +14,7 @@ from Vehicle import Vehicle
 from VehicleImporter import easyImport
 from Sensors import Lidar
 from Utils import Vector2D
+from SimEngine import SimEngine, RenderEngine
 
 try:
     from RosNodes import RosNode
@@ -35,10 +36,10 @@ class MainWindow(QMainWindow):
         self.truck, self.truckRender = easyImport(model)
         self.truck.pos = Vector2D(100, 100)
 
-        print("Axes")
-        print(self.truck.getAxes())
-        print("Axes1")
-        print(self.truck.getAxes1())
+        self.simEngine = SimEngine()
+        self.renderEngine = RenderEngine()
+        self.simEngine.registerDynamicObject(self.truck)
+        self.renderEngine.registerVehicle(self.truckRender)
 
         self.lidar = Lidar()
 
@@ -49,23 +50,24 @@ class MainWindow(QMainWindow):
             self.rosNode = None
 
         wall1 = Wall((400,100), 0)
+        self.simEngine.registerStaticObject(wall1)
+        self.renderEngine.registerObject(WallRender(wall1))
         wall2 = Wall((200,400), 90)
-        wall3 = Wall((400,0), 90)
-        wall3.width = 800
-        wall4 = Wall((400,800), 90)
-        wall4.width = 800
-        wall5 = Wall((0,400), 0)
-        wall5.width = 800
-        wall6 = Wall((800,400), 0)
-        wall6.width = 800
-        self.sceneObjects = [
-                WallRender(wall1),
-                WallRender(wall2),
-                WallRender(wall3),
-                WallRender(wall4),
-                WallRender(wall5),
-                WallRender(wall6)
-        ]
+        self.simEngine.registerStaticObject(wall2)
+        self.renderEngine.registerObject(WallRender(wall2))
+
+        wall3 = Wall((400,0), 90, [800,10])
+        self.simEngine.registerStaticObject(wall3)
+        self.renderEngine.registerObject(WallRender(wall3))
+        wall4 = Wall((400,800), 90, [800,10])
+        self.simEngine.registerStaticObject(wall4)
+        self.renderEngine.registerObject(WallRender(wall4))
+        wall5 = Wall((0,400), 0, [800,10])
+        self.simEngine.registerStaticObject(wall5)
+        self.renderEngine.registerObject(WallRender(wall5))
+        wall6 = Wall((800,400), 0, [800,10])
+        self.simEngine.registerStaticObject(wall6)
+        self.renderEngine.registerObject(WallRender(wall6))
 
         # Create and setup the timer
         self.timer = QTimer(self)
@@ -84,25 +86,19 @@ class MainWindow(QMainWindow):
         painter.setRenderHint(QPainter.Antialiasing)
 
         dt = 0.0016
-        self.truck.tick(dt)
-        self.truckRender.drawVehicle(painter)
-        self.truckRender.drawAxles(painter)
+
+        self.simEngine.tickEngine(dt)
+        self.renderEngine.draw(painter)
 
         scanData = self.lidar.scan(self.truck.pos.x,
                                    self.truck.pos.y,
                                    self.truck.angle,
-                                   self.sceneObjects)
+                                   self.simEngine.getAllObjects(),
+                                   [self.truck])
 
-        #print(scanData)
         if self.rosNode:
             scaledData = [x / 100 for x in scanData]
             self.rosNode.node.publishLidar(scaledData, self.lidar, self.truck.angle, dt)
-
-        for obj in self.sceneObjects:
-            obj.drawMain(painter)
-            collision, vector = self.truck.checkCollision(obj.parent)
-            if collision:
-                self.truck.pos -= Vector2D(vector[0], vector[1])
 
         painter.end()
 

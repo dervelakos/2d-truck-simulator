@@ -89,8 +89,7 @@ class Lidar:
             closestDist = float('inf')
             #closestObject = None
 
-            for pobj in objects:
-                obj = pobj.parent
+            for obj in objects:
                 if obj in ignoreObjects:
                     continue
 
