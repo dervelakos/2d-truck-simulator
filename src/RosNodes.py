@@ -133,7 +133,7 @@ class TwistSubscriber(Node):
 
     def listener_callback(self, msg):
         self.vehicle.setThrottle(msg.linear.x)
-        self.vehicle.setSteering(-msg.angular.z)
+        self.vehicle.setSteering(msg.angular.z*2)
         self.get_logger().info(f'Received twist message: linear={msg.linear.x, msg.linear.y, msg.linear.z}, angular={msg.angular.x, msg.angular.y, msg.angular.z}')
 
 class RosNode:

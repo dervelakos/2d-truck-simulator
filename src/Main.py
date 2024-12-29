@@ -70,11 +70,13 @@ if __name__ == '__main__':
     walls.append(Wall((400,100), 0))
     walls.append(Wall((200,400), 90))
 
-    walls.append(Wall((400,0), 90, [800,10]))
-    walls.append(Wall((400,800), 90, [800,10]))
-    walls.append(Wall((0,400), 0, [800,10]))
-    walls.append(Wall((800,400), 0, [800,10]))
+    walls.append(Wall((1000,0), 90, [2000,10]))
+    walls.append(Wall((1000,2000), 90, [2000,10]))
+    walls.append(Wall((0,1000), 0, [2000,10]))
+    walls.append(Wall((2000,1000), 0, [2000,10]))
 
+    walls.append(Wall((300,800), 90, [600,10]))
+    walls.append(Wall((800,300), 0, [600,10]))
     for wall in walls:
         simEngine.registerStaticObject(wall)
         if args.graphics:
