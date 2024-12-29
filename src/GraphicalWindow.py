@@ -1,16 +1,85 @@
+import math
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QWidget, QScrollArea, QVBoxLayout
-from PyQt5.QtGui import QPainter
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QPainter, QMouseEvent, QColor
+from PyQt5.QtCore import Qt, QTimer, QPoint, QLineF
 
 from SimEngine import RenderEngine
 
+class UIController:
+    def __init__(self, mainArea):
+        self.mainArea = mainArea
+        self.drawArea = None
+
+    def drawSelectionShadow(self, painter):
+        if (self.drawArea.dragStartPosition is None or
+            self.drawArea.dragPosition is None):
+                return
+        delta = QPoint(self.drawArea.dragPosition - self.drawArea.dragStartPosition)
+        angle = math.degrees(math.atan2(delta.y(), delta.x()))
+
+        length = math.hypot(delta.x(), delta.y())
+        width = 10
+
+        painter.save()
+
+        painter.setPen(Qt.black)
+        painter.setBrush(QColor(255, 0, 0, 64))
+
+        #painter.rotate(self.parent.angle)
+
+        # Draw rectangle centered at origin
+
+        painter.drawRect(int(self.drawArea.dragStartPosition.x()),
+                         int(self.drawArea.dragStartPosition.y()),
+                         int(delta.x()),
+                         int(delta.y()))
+
+        painter.restore()
+
+        painter.save()
+        painter.setPen(Qt.black)
+        painter.setBrush(QColor(0, 255, 0, 64))
+        line = QLineF(self.drawArea.dragStartPosition, self.drawArea.dragPosition)
+        painter.translate(int(self.drawArea.dragStartPosition.x()),
+                         int(self.drawArea.dragStartPosition.y()))
+        painter.rotate(angle)
+        painter.drawRect(0, 0, int(length), int(width))
+        painter.restore()
+
+        center = QPoint(self.drawArea.dragPosition + self.drawArea.dragStartPosition)/2
+        # Calculate the perpendicular vector for height
+        # Rotate 90 degrees clockwise
+        dx = width * math.sin(math.radians(angle))  # Change in x for height
+        dy = -width * math.cos(math.radians(angle)) # Change in y for height
+
+        # Calculate bottom corners
+        x1 = self.drawArea.dragStartPosition.x()
+        y1 = self.drawArea.dragStartPosition.y()
+        x2 = self.drawArea.dragPosition.x()
+        y2 = self.drawArea.dragPosition.y()
+        x4, y4 = x2 - dx, y2 - dy  # bottom-right
+
+        center_x = int((x1 + x4) / 2)
+        center_y = int((y1 + y4) / 2)
+
+        painter.drawEllipse(QPoint(center_x, center_y), 1, 1)
+        print (center_x, center_y, angle+90, length, width)
+
+
 class DrawWidget(QWidget):
-    def __init__(self, vehicle, renderEngine):
+    def __init__(self, vehicle, renderEngine, controller):
         super().__init__()
         self.setMinimumSize(2000,2000)
 
         self.vehicle = vehicle
         self.renderEngine = renderEngine
+
+        self.dragging = False
+        self.dragStartPosition = None
+        self.dragPosition = None
+
+        self.controller = controller
 
     def paintEvent(self, event):
         """
@@ -22,7 +91,26 @@ class DrawWidget(QWidget):
 
         self.renderEngine.draw(painter)
 
+        self.controller.drawSelectionShadow(painter)
+
         painter.end()
+
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.LeftButton:
+            self.dragging = True
+            self.dragStartPosition = event.pos()
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if self.dragging:
+            self.dragPosition = event.pos()
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        if event.button() == Qt.LeftButton:
+            self.dragging = False
+            print(f"Start:{self.dragStartPosition}, End: {event.pos()}")
+
+            self.dragStartPosition = None
+            self.dragPosition = None
 
 class MainWindow(QMainWindow):
     """
@@ -55,8 +143,9 @@ class MainWindow(QMainWindow):
         self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)  # Allow the scroll area to resize
 
+        self.controller = UIController(self)
         # Create a widget to hold the content
-        self.contentWidget = DrawWidget(vehicle, self.renderEngine)
+        self.contentWidget = DrawWidget(vehicle, self.renderEngine, self.controller)
 
         # Set the content widget to the scroll area
         self.scrollArea.setWidget(self.contentWidget)
@@ -71,6 +160,8 @@ class MainWindow(QMainWindow):
 
         # Set focus policy to ensure key events are received
         self.setFocus()  # Enable keyboard focus
+
+        self.controller.drawArea = self.contentWidget
 
     def getRenderEngine(self):
         return self.renderEngine
