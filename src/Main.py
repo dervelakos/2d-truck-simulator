@@ -15,6 +15,7 @@ from Sensors import Lidar
 from Utils import Vector2D
 from SimEngine import SimEngine
 from GraphicalWindow import MainWindow
+from ScenarioLoader import ScenarioLoader
 
 try:
     from RosNodes import RosNode
@@ -22,6 +23,7 @@ except ImportError as e:
     print(f"Module RosNodes could not be imported: {e}")
 
 DEFAULT_MODEL = "models/car.yaml"
+DEFAULT_SCENARIO = "scenarios/default.yaml"
 
 simEngine = None
 lidar = None
@@ -40,11 +42,14 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, handleSigint)
 
     parser = argparse.ArgumentParser(description="A 2d truck/vehicle simulator")
+    parser.add_argument("--scenario", default=DEFAULT_SCENARIO, help="The default map to load")
     parser.add_argument("--graphics", action="store_true", help="Start Qt5 window")
     parser.add_argument("--ros", action="store_true", help="Start ROS nodes (requires sourced ros)")
     parser.add_argument("model", type=str, nargs='?', default=DEFAULT_MODEL, help="Model of the vehicle")
 
     args = parser.parse_args()
+
+    scenario = ScenarioLoader(args.scenario)
 
     #Create Vehicle
     truck, truckRender = easyImport(args.model)
@@ -65,22 +70,7 @@ if __name__ == '__main__':
     #Lidar
     lidar = Lidar(simEngine, truck, rosNode=rosNode)
 
-    #TODO: I need a scanario loader
-    walls = []
-    walls.append(Wall((400,100), 0))
-    walls.append(Wall((200,400), 90))
-
-    walls.append(Wall((1000,0), 90, [2000,10]))
-    walls.append(Wall((1000,2000), 90, [2000,10]))
-    walls.append(Wall((0,1000), 0, [2000,10]))
-    walls.append(Wall((2000,1000), 0, [2000,10]))
-
-    walls.append(Wall((300,800), 90, [600,10]))
-    walls.append(Wall((800,300), 0, [600,10]))
-    for wall in walls:
-        simEngine.registerStaticObject(wall)
-        if args.graphics:
-            window.getRenderEngine().registerObject(RectangleRender(wall))
+    scenario.instantiateScenario(simEngine, window.getRenderEngine())
 
     simEngine.startThreaded()
     if rosNode:
