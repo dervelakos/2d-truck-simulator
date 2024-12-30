@@ -7,9 +7,53 @@ from PyQt5.QtCore import Qt, QTimer, QPoint, QLineF
 from SimEngine import RenderEngine
 
 class UIController:
-    def __init__(self, mainArea):
+    def __init__(self, mainArea, simEngine, renderEngine, aliases):
         self.mainArea = mainArea
+        self.simEngine = simEngine
+        self.renderEngine = renderEngine
+        self.aliases = aliases
         self.drawArea = None
+
+        self.editMode = False
+
+    def toggleEditMode(self):
+        self.editMode = not self.editMode
+        return self.editMode
+
+    def createObject(self):
+        if not self.editMode:
+            return
+
+        delta = QPoint(self.drawArea.dragPosition - self.drawArea.dragStartPosition)
+        angle = math.degrees(math.atan2(delta.y(), delta.x()))
+
+        length = math.hypot(delta.x(), delta.y())
+        width = 10
+        # Calculate the perpendicular vector for height
+        # Rotate 90 degrees clockwise
+        dx = width * math.sin(math.radians(angle))  # Change in x for height
+        dy = -width * math.cos(math.radians(angle)) # Change in y for height
+
+        # Calculate bottom corners
+        x1 = self.drawArea.dragStartPosition.x()
+        y1 = self.drawArea.dragStartPosition.y()
+        x2 = self.drawArea.dragPosition.x()
+        y2 = self.drawArea.dragPosition.y()
+        x4, y4 = x2 - dx, y2 - dy  # bottom-right
+
+        center_x = int((x1 + x4) / 2)
+        center_y = int((y1 + y4) / 2)
+
+        print (center_x, center_y, angle+90, length, width)
+
+        if self.editMode:
+            alias = self.aliases["Wall"]
+            tmp = alias.genObject([center_x, center_y],
+                                  angle+90,
+                                  [length, width])
+            tmp.setAlias(alias)
+            self.simEngine.registerStaticObject(tmp)
+            self.renderEngine.registerObject(alias.genRender(tmp))
 
     def drawSelectionShadow(self, painter):
         if (self.drawArea.dragStartPosition is None or
@@ -64,8 +108,16 @@ class UIController:
         center_y = int((y1 + y4) / 2)
 
         painter.drawEllipse(QPoint(center_x, center_y), 1, 1)
-        print (center_x, center_y, angle+90, length, width)
+        #print (center_x, center_y, angle+90, length, width)
 
+        #if self.editMode:
+        #    alias = self.aliases["Wall"]
+        #    tmp = alias.genObject([center_x, center_y],
+        #                          angle+90,
+        #                          [length, width])
+        #    tmp.setAlias(alias)
+        #    self.simEngine.registerStaticObject(tmp)
+        #    self.renderEngine.registerObject(alias.genRender(tmp))
 
 class DrawWidget(QWidget):
     def __init__(self, vehicle, renderEngine, controller):
@@ -106,6 +158,7 @@ class DrawWidget(QWidget):
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
+            self.controller.createObject()
             self.dragging = False
             print(f"Start:{self.dragStartPosition}, End: {event.pos()}")
 
@@ -116,12 +169,15 @@ class MainWindow(QMainWindow):
     """
     The GUI window for displaying the simualtor state
     """
-    def __init__(self, vehicle):
+    def __init__(self, vehicle, scenario, simEngine):
         super().__init__()
         self.setGeometry(100, 100, 800, 800)
         self.angle = 0  # Initial rotation anglea
 
         self.vehicle = vehicle
+        self.scenario = scenario
+        self.simEngine = simEngine
+
         self.renderEngine = RenderEngine()
 
         menuBar = self.menuBar()
@@ -131,6 +187,11 @@ class MainWindow(QMainWindow):
         editAction.setShortcut("Ctrl+E")
         editAction.triggered.connect(self.enableEditMode)
         fileMenu.addAction(editAction)
+
+        saveAction = QAction("&Save", self)
+        saveAction.setShortcut("Ctrl+S")
+        saveAction.triggered.connect(self.saveScenario)
+        fileMenu.addAction(saveAction)
 
         # Create a central widget and set it
         centralWidget = QWidget()
@@ -143,7 +204,11 @@ class MainWindow(QMainWindow):
         self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)  # Allow the scroll area to resize
 
-        self.controller = UIController(self)
+        self.controller = UIController(self,
+                                       self.simEngine,
+                                       self.renderEngine,
+                                       self.scenario.getAliases())
+
         # Create a widget to hold the content
         self.contentWidget = DrawWidget(vehicle, self.renderEngine, self.controller)
 
@@ -167,7 +232,12 @@ class MainWindow(QMainWindow):
         return self.renderEngine
 
     def enableEditMode(self):
-        print("Edit Mode Enabled")
+        status = self.controller.toggleEditMode()
+        print("Edit Mode Enabled", status)
+
+    def saveScenario(self):
+        print("Save Scenario")
+        self.scenario.saveScenario(self.simEngine)
 
     def updateRotation(self):
         self.contentWidget.update()    # Request repaint

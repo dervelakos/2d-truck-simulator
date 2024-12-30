@@ -4,15 +4,24 @@ from SceneObjects import *
 from VehicleRender import *
 
 class Alias:
-    def __init__(self, classType, render):
+    def __init__(self, classType, render, name):
         self.classType = classType
         self.render = render
+        self.name = name
 
     def genObject(self, loc, angle, dim):
         return globals()[self.classType](loc, angle, dim)
 
     def genRender(self, obj):
         return globals()[self.render](obj)
+
+    def getName(self):
+        return self.name
+
+    def getDict(self):
+        return {"type": self.classType,
+                "render": self.render,
+                "name": self.name}
 
 class ScenarioLoader:
     def __init__(self, scenarioName):
@@ -35,7 +44,46 @@ class ScenarioLoader:
                    continue
             self.aliases[alias['name']] = Alias(
                     alias["type"],
-                    alias["render"])
+                    alias["render"],
+                    alias["name"])
+
+    def getAliases(self):
+        return self.aliases
+
+    def getYamlAliasses(self):
+        aliasses = []
+        for aliasName in self.aliases:
+            alias = self.aliases[aliasName]
+            aliasses.append(alias.getDict())
+
+        return aliasses
+
+    def getYamlStaticObjects(self, simEngine):
+        staticObjects = []
+
+        for obj in simEngine.getStaticObjects():
+            staticObjects.append(obj.toDict())
+
+        return staticObjects
+
+    def getYamlObjects(self, simEngine):
+        objects = {}
+
+        dynamicObjects = []
+
+        objects["static"] = self.getYamlStaticObjects(simEngine)
+        objects["dynamic"] = dynamicObjects
+
+        return objects
+
+    def saveScenario(self, simEngine):
+        self.saveAsScenario(self.scenarioName, simEngine)
+
+    def saveAsScenario(self, scenarioName, simEngine):
+        d = {"aliases": self.getYamlAliasses(),
+             "objects": self.getYamlObjects(simEngine)}
+        with open(scenarioName, 'w') as file:
+            yaml.dump(d, file, default_flow_style=False)
 
     def instantiateScenario(self, simEngine, renderEngine):
         assert(simEngine is not None), "Simulation engine can't be None"
@@ -45,6 +93,7 @@ class ScenarioLoader:
                 print (obj)
                 alias = self.aliases[obj['alias']]
                 tmp = alias.genObject(obj['loc'], obj['angle'], obj['dim'])
+                tmp.setAlias(alias)
                 simEngine.registerStaticObject(tmp)
                 if renderEngine is None:
                     continue

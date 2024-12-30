@@ -1,44 +1,98 @@
 aliases:
-  - type: Wall
-    render: RectangleRender
-    name: Wall
-  - type: Vechile
-    render: SimpleVehicleRender
-    name: Vehicle
+- name: Wall
+  render: RectangleRender
+  type: Wall
+- name: Vehicle
+  render: SimpleVehicleRender
+  type: Vechile
 objects:
+  dynamic: []
   static:
-    - alias: Wall
-      loc: [400, 100]
-      angle: 0
-      dim: [100, 10]
-    - alias: Wall
-      loc: [200, 400]
-      angle: 90
-      dim: [100, 10]
-    - alias: Wall
-      loc: [1000, 0]
-      angle: 90
-      dim: [2000, 10]
-    - alias: Wall
-      loc: [1000, 2000]
-      angle: 90
-      dim: [2000, 10]
-    - alias: Wall
-      loc: [0, 1000]
-      angle: 0
-      dim: [2000, 10]
-    - alias: Wall
-      loc: [2000, 1000]
-      angle: 0
-      dim: [2000, 10]
-    - alias: Wall
-      loc: [300, 800]
-      angle: 90
-      dim: [600, 10]
-    - alias: Wall
-      loc: [800, 300]
-      angle: 0
-      dim: [600, 10]
-  dynamic:
-    - alias: Vehicle
-      loc: [100, 100]
+  - alias: Wall
+    angle: 0
+    dim:
+    - 100
+    - 10
+    loc:
+    - 400.0
+    - 100.0
+  - alias: Wall
+    angle: 90
+    dim:
+    - 100
+    - 10
+    loc:
+    - 200.0
+    - 400.0
+  - alias: Wall
+    angle: 90
+    dim:
+    - 2000
+    - 10
+    loc:
+    - 1000.0
+    - 0.0
+  - alias: Wall
+    angle: 90
+    dim:
+    - 2000
+    - 10
+    loc:
+    - 1000.0
+    - 2000.0
+  - alias: Wall
+    angle: 0
+    dim:
+    - 2000
+    - 10
+    loc:
+    - 0.0
+    - 1000.0
+  - alias: Wall
+    angle: 0
+    dim:
+    - 2000
+    - 10
+    loc:
+    - 2000.0
+    - 1000.0
+  - alias: Wall
+    angle: 90
+    dim:
+    - 600
+    - 10
+    loc:
+    - 300.0
+    - 800.0
+  - alias: Wall
+    angle: 0
+    dim:
+    - 600
+    - 10
+    loc:
+    - 800.0
+    - 300.0
+  - alias: Wall
+    angle: 225.80409849608924
+    dim:
+    - 806.1811210888035
+    - 10
+    loc:
+    - 1132.0
+    - 1048.0
+  - alias: Wall
+    angle: -0.37943670141898167
+    dim:
+    - 453.00993366591865
+    - 10
+    loc:
+    - 1419.0
+    - 534.0
+  - alias: Wall
+    angle: -89.60280858444557
+    dim:
+    - 577.0138646514484
+    - 10
+    loc:
+    - 545.0
+    - 1316.0

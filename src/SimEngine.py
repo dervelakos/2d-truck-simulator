@@ -35,6 +35,9 @@ class SimEngine:
                 if collision:
                     obj.pos -= Vector2D(vector[0], vector[1])
 
+    def getStaticObjects(self):
+        return self.staticObjects
+
     def getAllObjects(self):
         return self.staticObjects + self.dynamicObjects
 

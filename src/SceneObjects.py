@@ -14,6 +14,14 @@ class SceneObject:
 
         self.boundOffset = Vector2D(0.0, 0.0)
 
+        self.alias = None #Alias used for loading
+
+    def toDict(self):
+        return {"alias": self.alias.getName(),
+                "loc": [self.pos.x, self.pos.y],
+                "angle": self.angle,
+                "dim": [self.width, self.length]}
+
     def getCenter(self):
         rad = math.radians(self.angle)
         return self.pos + self.boundOffset.rotate(rad)
@@ -23,6 +31,12 @@ class SceneObject:
 
     def getAngle(self):
         return self.angle
+
+    def setAlias(self, alias):
+        self.alias = alias
+
+    def getAlias(self):
+        return self.alias
 
     def getCorners(self):
         """

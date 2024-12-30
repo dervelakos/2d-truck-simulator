@@ -49,6 +49,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    #Simulation Engine
+    simEngine = SimEngine()
+
     scenario = ScenarioLoader(args.scenario)
 
     #Create Vehicle
@@ -57,10 +60,8 @@ if __name__ == '__main__':
 
     if args.graphics:
         app = QApplication(sys.argv)
-        window = MainWindow(truck)
+        window = MainWindow(truck, scenario, simEngine)
 
-    #Simulation Engine
-    simEngine = SimEngine()
     simEngine.registerDynamicObject(truck)
     if args.graphics:
         window.getRenderEngine().registerVehicle(truckRender)

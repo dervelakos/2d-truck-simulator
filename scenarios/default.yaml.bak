@@ -1,0 +1,44 @@
+aliases:
+  - type: Wall
+    render: RectangleRender
+    name: Wall
+  - type: Vechile
+    render: SimpleVehicleRender
+    name: Vehicle
+objects:
+  static:
+    - alias: Wall
+      loc: [400, 100]
+      angle: 0
+      dim: [100, 10]
+    - alias: Wall
+      loc: [200, 400]
+      angle: 90
+      dim: [100, 10]
+    - alias: Wall
+      loc: [1000, 0]
+      angle: 90
+      dim: [2000, 10]
+    - alias: Wall
+      loc: [1000, 2000]
+      angle: 90
+      dim: [2000, 10]
+    - alias: Wall
+      loc: [0, 1000]
+      angle: 0
+      dim: [2000, 10]
+    - alias: Wall
+      loc: [2000, 1000]
+      angle: 0
+      dim: [2000, 10]
+    - alias: Wall
+      loc: [300, 800]
+      angle: 90
+      dim: [600, 10]
+    - alias: Wall
+      loc: [800, 300]
+      angle: 0
+      dim: [600, 10]
+  dynamic:
+    - alias: Vehicle
+      loc: [100, 100]
