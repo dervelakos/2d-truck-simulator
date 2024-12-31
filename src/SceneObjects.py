@@ -3,14 +3,14 @@ import math
 from Utils import Vector2D
 
 class SceneObject:
-    def __init__(self, initialPos, rotation):
+    def __init__(self, initialPos, rotation, dimensions, data=None):
 
         self.pos = Vector2D(initialPos[0], initialPos[1])
         self.angle = rotation
 
         #We support only rectanglular objects :P
-        self.width = 0.0
-        self.length = 0.0
+        self.width = dimensions[0]
+        self.length = dimensions[1]
 
         self.boundOffset = Vector2D(0.0, 0.0)
 
@@ -198,7 +198,4 @@ class SceneObject:
 
 class Wall(SceneObject):
     def __init__(self, initialPos, rotation, dimensions=[100.0, 10.0]):
-        super().__init__(initialPos, rotation)
-
-        self.width = dimensions[0]
-        self.length = dimensions[1]
+        super().__init__(initialPos, rotation, dimensions)

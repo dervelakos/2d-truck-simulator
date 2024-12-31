@@ -1,0 +1,16 @@
+aliases:
+- name: Wall
+  model: null
+  render: RectangleRender
+  type: Wall
+- name: Vehicle
+  model: null
+  render: SimpleVehicleRender
+  type: Vehicle
+- name: WhiteTruck
+  model: "models/white-truck.yaml"
+  render: SimpleVehicleRender
+  type: Vehicle
+objects:
+  dynamic: []
+  static: []

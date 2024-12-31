@@ -8,8 +8,8 @@ class Vehicle(SceneObject):
     """
     A class representing a vehicle.
     """
-    def __init__(self, initialPos, rotation, data=None):
-        super().__init__(initialPos, rotation)
+    def __init__(self, initialPos, rotation, dimensions=[0, 0], data=None):
+        super().__init__(initialPos, rotation, dimensions)
 
         self.inModel = InertialModel1D(mass=data["mass"],
                                        friction=data["friction"])

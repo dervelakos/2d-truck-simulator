@@ -1,0 +1,13 @@
+aliases:
+- name: Wall
+  render: RectangleRender
+  type: Wall
+- name: Vehicle
+  render: SimpleVehicleRender
+  type: Vehicle
+- name: WhiteTruck
+  render: SimpleVehicleRender
+  type: Vehicle
+objects:
+  dynamic: []
+  static: []

@@ -2,17 +2,30 @@ import yaml
 
 from SceneObjects import *
 from VehicleRender import *
+from Vehicle import Vehicle
 
 class Alias:
-    def __init__(self, classType, render, name):
+    #TODO: This initialization is too redudant simplify it
+    def __init__(self, classType, model, render, name):
         self.classType = classType
+        self.model = model
         self.render = render
         self.name = name
 
+        if self.model:
+            with open(self.model, "r") as file:
+                self.data = yaml.safe_load(file)
+        else:
+            self.data = None
+
     def genObject(self, loc, angle, dim):
+        if self.data:
+            return globals()[self.classType](loc, angle, dim, data=self.data)
         return globals()[self.classType](loc, angle, dim)
 
     def genRender(self, obj):
+        if self.data:
+            return globals()[self.render](obj, data=self.data)
         return globals()[self.render](obj)
 
     def getName(self):
@@ -20,6 +33,7 @@ class Alias:
 
     def getDict(self):
         return {"type": self.classType,
+                "model": self.model,
                 "render": self.render,
                 "name": self.name}
 
@@ -38,12 +52,14 @@ class ScenarioLoader:
 
         for alias in self.data["aliases"]:
             if ("type" not in alias or
+               "model" not in alias or
                "name" not in alias or
                "render" not in alias):
                    print("Could not read alias (missing type or name).")
                    continue
             self.aliases[alias['name']] = Alias(
                     alias["type"],
+                    alias["model"],
                     alias["render"],
                     alias["name"])
 

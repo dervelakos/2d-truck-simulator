@@ -1,6 +1,6 @@
 import math
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QWidget, QScrollArea, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QWidget, QScrollArea, QHBoxLayout, QListWidget
 from PyQt5.QtGui import QPainter, QMouseEvent, QColor
 from PyQt5.QtCore import Qt, QTimer, QPoint, QLineF
 
@@ -15,10 +15,16 @@ class UIController:
         self.drawArea = None
 
         self.editMode = False
+        self.selectedListObject = next(iter(self.aliases))
+        print(self.selectedListObject)
 
     def toggleEditMode(self):
         self.editMode = not self.editMode
+        self.mainArea.selectionList.setVisible(self.editMode)
         return self.editMode
+
+    def selectListObject(self, item):
+        self.selectedListObject = item.text()
 
     def createObject(self):
         if not self.editMode:
@@ -47,7 +53,7 @@ class UIController:
         print (center_x, center_y, angle+90, length, width)
 
         if self.editMode:
-            alias = self.aliases["Wall"]
+            alias = self.aliases[self.selectedListObject]
             tmp = alias.genObject([center_x, center_y],
                                   angle+90,
                                   [length, width])
@@ -158,6 +164,7 @@ class DrawWidget(QWidget):
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
+            print(self.controller)
             self.controller.createObject()
             self.dragging = False
             print(f"Start:{self.dragStartPosition}, End: {event.pos()}")
@@ -198,7 +205,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(centralWidget)
 
         # Create a layout for the central widget
-        layout = QVBoxLayout(centralWidget)
+        layout = QHBoxLayout(centralWidget)
 
         # Create a scroll area
         self.scrollArea = QScrollArea()
@@ -217,6 +224,17 @@ class MainWindow(QMainWindow):
 
         # Add the scroll area to the main layout
         layout.addWidget(self.scrollArea)
+
+        self.selectionList = QListWidget()
+
+        for itemName in self.controller.aliases:
+            self.selectionList.addItem(itemName)
+
+        self.selectionList.itemClicked.connect(self.controller.selectListObject)
+        self.selectionList.setFixedWidth(100)
+        self.selectionList.setVisible(False)
+        layout.addWidget(self.selectionList)
+
 
         # Create and setup the timer
         self.timer = QTimer(self)

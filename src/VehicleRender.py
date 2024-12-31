@@ -6,13 +6,17 @@ class BasicRender:
         pass
 
 class RectangleRender:
-    def __init__(self, parent, color=QColor(0, 255, 0), image=None):
+    def __init__(self, parent, color=QColor(0, 255, 0), data=None):
         self.parent = parent
         self.color = color
 
-        self.image = image
+        if data and 'image' in data:
+            self.image = QImage(data["image"]).scaled(int(self.parent.length),
+                                                      int(self.parent.width))
+        else:
+            self.image = None
 
-    def drawMain(self, painter):
+    def drawRect(self, painter):
         painter.save()
 
         painter.setPen(Qt.black)
@@ -28,6 +32,37 @@ class RectangleRender:
                          int(self.parent.width))
 
         painter.restore()
+
+    def drawImage(self, painter):
+        """
+        Draws the truck on the GUI.
+
+        Args:
+            painter (QPainter): the painter to draw with
+        """
+        # Set the color and draw the rectangle
+        painter.save()
+
+        painter.setPen(Qt.black)
+        painter.setBrush(self.color)
+
+        painter.translate(int(self.parent.pos.x), int(self.parent.pos.y))
+        painter.rotate(self.parent.angle)
+        # Draw rectangle centered at origin
+        painter.translate(int(self.parent.wheelBase/2),0)
+        painter.drawImage(int(-self.parent.length/2),
+                         int(-self.parent.width/2),
+                         self.image)
+                         #sw=int(self.parent.length),
+                         #sh=int(self.parent.width))
+
+        painter.restore()
+
+    def drawMain(self, painter):
+        if self.image:
+            self.drawImage(painter)
+        else:
+            self.drawRect(painter)
 
 class SimpleVehicleRender:
     """

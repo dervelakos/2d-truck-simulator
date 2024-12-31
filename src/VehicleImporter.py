@@ -13,13 +13,13 @@ class VehicleDescription:
 
     def getVehicle(self, initialPos=[0,0], rotation=0):
         if self.vehicle is None:
-            self.vehicle = Vehicle(initialPos, rotation, self.data)
+            self.vehicle = Vehicle(initialPos, rotation, data=self.data)
         return self.vehicle
 
     def getVehicleRender(self):
         if self.vehicleRender is None:
             self.vehicleRender = SimpleVehicleRender(self.getVehicle(),
-                                                     self.data)
+                                                     data=self.data)
         return self.vehicleRender
 
 def easyImport(descriptor):
