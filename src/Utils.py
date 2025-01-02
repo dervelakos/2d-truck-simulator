@@ -1,6 +1,13 @@
+"""
+Common classes to be used by mutiliple modules
+"""
+
 import math
 
 class Vector2D:
+    """
+    A class representing a two dimentional vector
+    """
     def __init__(self, x, y):
         self.x = float(x)
         self.y = float(y)

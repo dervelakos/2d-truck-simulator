@@ -1,8 +1,14 @@
+"""
+This module contains the description of the objects in the simulation
+"""
 import math
 
 from Utils import Vector2D
 
 class SceneObject:
+    """
+    The basic object of the simulation
+    """
     def __init__(self, initialPos, rotation, data):
 
         self.pos = Vector2D(initialPos[0], initialPos[1])
@@ -12,7 +18,7 @@ class SceneObject:
         if 'width' in data:
             self.width = data['width']
         if 'length' in data:
-            self.width = data['length']
+            self.length = data['length']
 
         if 'resizable' in data:
             self.resizable = data['resizable']
@@ -62,15 +68,15 @@ class SceneObject:
             list: A list of (x, y) tuples representing the corners.
         """
         # Half dimensions
-        half_width = self.width / 2
-        half_length = self.length / 2
+        halfWidth = self.width / 2
+        halfLength = self.length / 2
 
         # Corners relative to the center (before rotation)
         corners = [
-            (-half_length, -half_width),  # Bottom-left
-            (half_length, -half_width),  # Bottom-right
-            (half_length, half_width),   # Top-right
-            (-half_length, half_width),  # Top-left
+            (-halfLength, -halfWidth),  # Bottom-left
+            (halfLength, -halfWidth),  # Bottom-right
+            (halfLength, halfWidth),   # Top-right
+            (-halfLength, halfWidth),  # Top-left
         ]
 
         # Convert angle from degrees to radians
@@ -78,31 +84,14 @@ class SceneObject:
         rotatedOffsetX, rotatedOffsetY = self.boundOffset.rotate(rad).extract()
 
         # Rotate corners around the center
-        rotated_corners = []
+        rotatedCorners = []
         for corner in corners:
-            rotated_x = corner[0] * math.cos(rad) - corner[1] * math.sin(rad)
-            rotated_y = corner[0] * math.sin(rad) + corner[1] * math.cos(rad)
-            rotated_corners.append((rotated_x + self.pos.x + rotatedOffsetX,
-                                    rotated_y + self.pos.y + rotatedOffsetY))
+            rotatedX = corner[0] * math.cos(rad) - corner[1] * math.sin(rad)
+            rotatedY = corner[0] * math.sin(rad) + corner[1] * math.cos(rad)
+            rotatedCorners.append((rotatedX + self.pos.x + rotatedOffsetX,
+                                    rotatedY + self.pos.y + rotatedOffsetY))
 
-        return rotated_corners
-
-    def getAxes1(self):
-        axes = []
-        rads = math.radians(self.angle)
-        axes.append((math.cos(rads), math.sin(rads)))
-        axes.append((-math.sin(rads), math.cos(rads)))
-        return axes
-
-    def getAxis(self, p1, p2):
-        edge = (p2[0] - p1[0], p2[1] - p1[1])
-        axis = (-edge[1], edge[0])
-        length = math.sqrt(axis[0]**2 + axis[1]**2)
-        if length > 0:
-            axis = (axis[0] / length, axis[1] / length)
-        else:
-            axis = (0,0)
-        return axis
+        return rotatedCorners
 
     def getAxes(self):
         """
@@ -115,6 +104,7 @@ class SceneObject:
         corners = self.getCorners()
         axes = []
 
+        #pylint: disable=consider-using-enumerate
         for i in range(len(corners)):
             # Get the edge vector
             p1 = corners[i]
@@ -137,7 +127,7 @@ class SceneObject:
         """Calculates the min and max values after projecting the corners to the axis"""
         dots = []
         for corner in corners:
-            dotProduct = (corner[0] * axis[0] + corner[1] * axis[1])
+            dotProduct = corner[0] * axis[0] + corner[1] * axis[1]
             dots.append(dotProduct)
 
         return min(dots), max(dots)
@@ -170,21 +160,17 @@ class SceneObject:
         Returns:
             bool: True if the rectangles collide, False otherwise.
         """
-        rect1_corners = self.getCorners()
-        rect2_corners = sceneObject.getCorners()
-
-        axes1 = self.getAxes()
-        axes2 = sceneObject.getAxes()
-        axes = axes1 + axes2
+        rect1Corners = self.getCorners()
+        rect2Corners = sceneObject.getCorners()
 
         minOverlapAmount = float('inf')
         minOverlapAxis = None
 
         # Iterate through all axes
-        for axis in axes:
+        for axis in self.getAxes() + sceneObject.getAxes():
             # Project both rectangles onto the current axis
-            min1, max1 = self.project(axis, rect1_corners)
-            min2, max2 = sceneObject.project(axis, rect2_corners)
+            min1, max1 = self.project(axis, rect1Corners)
+            min2, max2 = sceneObject.project(axis, rect2Corners)
 
             # If there's a gap between the projections, they are not colliding
             if not (max1 >= min2 and max2 >= min1):
@@ -201,8 +187,8 @@ class SceneObject:
         center2 = sceneObject.getCenter()
         directionVector = center2 - center1
 
-        #if self.dotProduct(directionVector, minOverlapAxis) < 0:
-        if directionVector.dot(minOverlapAxis) < 0:
+        if minOverlapAxis and directionVector.dot(minOverlapAxis) < 0:
+            #pylint: disable=invalid-unary-operand-type
             minOverlapAxis = -minOverlapAxis
 
         # No separating axis found, the rectangles are colliding, return
@@ -210,8 +196,5 @@ class SceneObject:
         return True, (minOverlapAxis * minOverlapAmount).extract()
 
     def __str__(self):
-        return f"x:{self.x}, y: {self.y}, angle: {self.angle}, width: {self.width}, length: {self.length}"
-
-#class Wall(SceneObject):
-#    def __init__(self, initialPos, rotation, dimensions=[100.0, 10.0]):
-#        super().__init__(initialPos, rotation, dimensions)
+        return (f"x:{self.pos.x}, y: {self.pos.y}, angle: {self.angle}, "
+                f"width: {self.width}, length: {self.length}")

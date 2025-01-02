@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
+"""
+Main function for simulation startup
+"""
 import sys
 import signal
-import math
-import datetime
 import argparse
 
 from PyQt5.QtWidgets import QApplication
 
-from VehicleRender import SimpleVehicleRender, RectangleRender
-from Vehicle import Vehicle
 from VehicleImporter import easyImport
 from Sensors import Lidar
 from Utils import Vector2D
@@ -24,18 +23,21 @@ except ImportError as e:
 DEFAULT_MODEL = "models/car.yaml"
 DEFAULT_SCENARIO = "scenarios/default.yaml"
 
-simEngine = None
-lidar = None
-rosNode = None
+SIM_ENGINE = None
+LIDAR = None
+ROS_NODE = None
 
 # Define a signal handler function
 def handleSigint(signalReceived, frame):
+    """
+    Handle sigint for proper shutdown
+    """
     # pylint: disable=unused-argument
     print("Ctrl+C pressed. Exiting the application...")
     QApplication.quit()  # Gracefully quit the application
 
-    simEngine.stop()
-    lidar.stop()
+    SIM_ENGINE.stop()
+    LIDAR.stop()
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, handleSigint)
@@ -44,12 +46,13 @@ if __name__ == '__main__':
     parser.add_argument("--scenario", default=DEFAULT_SCENARIO, help="The default map to load")
     parser.add_argument("--graphics", action="store_true", help="Start Qt5 window")
     parser.add_argument("--ros", action="store_true", help="Start ROS nodes (requires sourced ros)")
-    parser.add_argument("model", type=str, nargs='?', default=DEFAULT_MODEL, help="Model of the vehicle")
+    parser.add_argument("model", type=str, nargs='?', default=DEFAULT_MODEL,
+                            help="Model of the vehicle")
 
     args = parser.parse_args()
 
     #Simulation Engine
-    simEngine = SimEngine()
+    SIM_ENGINE = SimEngine()
 
     scenario = ScenarioLoader(args.scenario)
 
@@ -59,29 +62,28 @@ if __name__ == '__main__':
 
     if args.graphics:
         app = QApplication(sys.argv)
-        window = MainWindow(truck, scenario, simEngine)
+        window = MainWindow(truck, scenario, SIM_ENGINE)
 
-    simEngine.registerDynamicObject(truck)
+    SIM_ENGINE.registerDynamicObject(truck)
     if args.graphics:
         window.getRenderEngine().registerVehicle(truckRender)
 
     if args.ros:
-        rosNode = RosNode(truck, "vehicle1")
+        ROS_NODE = RosNode(truck, "vehicle1")
     #Lidar
-    lidar = Lidar(simEngine, truck, rosNode=rosNode)
+    LIDAR = Lidar(SIM_ENGINE, truck, rosNode=ROS_NODE)
 
-    scenario.instantiateScenario(simEngine, window.getRenderEngine())
+    scenario.instantiateScenario(SIM_ENGINE, window.getRenderEngine())
 
-    simEngine.startThreaded()
-    if rosNode:
-        rosNode.start()
-    lidar.startThreaded()
+    SIM_ENGINE.startThreaded()
+    if ROS_NODE:
+        ROS_NODE.start()
+    LIDAR.startThreaded()
 
     if args.graphics:
         window.show()
         sys.exit(app.exec_())
 
     #Terminate
-    lidar.wait()
-    simEngine.wait()
-
+    LIDAR.wait()
+    SIM_ENGINE.wait()

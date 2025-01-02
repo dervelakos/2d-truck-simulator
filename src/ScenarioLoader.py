@@ -1,10 +1,20 @@
-import yaml
+"""
+This module contains all the necessary fuctionality to load a scenario from a
+yaml file
+"""
 
+import yaml
+# pylint: disable=wildcard-import
+# pylint: disable=unused-wildcard-import
 from SceneObjects import *
 from VehicleRender import *
-from Vehicle import Vehicle
+from Vehicle import Vehicle # pylint: disable=unused-import
 
 class Alias:
+    """
+    This class describes a object to be reused when saving and loading a
+    scenario.
+    """
     def __init__(self, aliasData):
         self.aliasData = aliasData
         self.data = None
@@ -25,7 +35,7 @@ class Alias:
 
     def getModelData(self):
         if self.data is None:
-            with open(self.aliasData['model'], "r") as file:
+            with open(self.aliasData['model'], "r", encoding="utf-8") as file:
                 self.data = yaml.safe_load(file)
         return self.data
 
@@ -48,9 +58,12 @@ class Alias:
         return self.aliasData
 
 class ScenarioLoader:
+    """
+    Class for loading a scenario from a yaml file
+    """
     def __init__(self, scenarioName):
         self.scenarioName = scenarioName
-        with open(scenarioName, 'r') as file:
+        with open(scenarioName, 'r', encoding="utf-8") as file:
             self.data = yaml.safe_load(file)
         self.aliases = {}
 
@@ -58,11 +71,14 @@ class ScenarioLoader:
         self.loadingErrors = False
 
     def createAliases(self):
+        """
+        Parse all the alises from the yaml file
+        """
         if "aliases" not in self.data:
             return
 
         for aliasData in self.data["aliases"]:
-            aliasObj = Alias(aliasData);
+            aliasObj = Alias(aliasData)
             if aliasObj.isValid():
                 self.aliases[aliasObj.getName()] = aliasObj
             else:
@@ -72,14 +88,19 @@ class ScenarioLoader:
         return self.aliases
 
     def getYamlAliasses(self):
+        """
+        Generate yaml structure for all the aliases
+        """
         aliasses = []
-        for aliasName in self.aliases:
-            alias = self.aliases[aliasName]
+        for alias, _ in self.aliases.items():
             aliasses.append(alias.getDict())
 
         return aliasses
 
     def getYamlStaticObjects(self, simEngine):
+        """
+        Generate yaml structure for all the static objects
+        """
         staticObjects = []
 
         for obj in simEngine.getStaticObjects():
@@ -88,6 +109,9 @@ class ScenarioLoader:
         return staticObjects
 
     def getYamlObjects(self, simEngine):
+        """
+        Generate yaml structure for all the objects in the scenario
+        """
         objects = {}
 
         dynamicObjects = []
@@ -101,6 +125,9 @@ class ScenarioLoader:
         self.saveAsScenario(self.scenarioName, simEngine)
 
     def saveAsScenario(self, scenarioName, simEngine):
+        """
+        Save the scenario as it currently is
+        """
         d = {"aliases": self.getYamlAliasses(),
              "objects": self.getYamlObjects(simEngine)}
 
@@ -109,10 +136,13 @@ class ScenarioLoader:
             print("Scenario contains loading errors, saving on the same file is not permitted!")
             return
 
-        with open(scenarioName, 'w') as file:
+        with open(scenarioName, 'w', encoding="utf-8") as file:
             yaml.dump(d, file, default_flow_style=False)
 
     def instantiateScenario(self, simEngine, renderEngine):
+        """
+        Loads all the objects of the scenario into the engines
+        """
         assert(simEngine is not None), "Simulation engine can't be None"
         assert('objects' in self.data), "Sceanrio file requires objects element"
         if 'static' in self.data['objects']:
