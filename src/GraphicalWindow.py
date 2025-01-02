@@ -1,12 +1,20 @@
+"""
+Module handling all Qt5 and graphical interface functionality
+"""
 import math
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QWidget, QScrollArea, QHBoxLayout, QListWidget
+from PyQt5.QtWidgets import (
+        QMainWindow, QAction, QWidget,
+        QScrollArea, QHBoxLayout, QListWidget)
 from PyQt5.QtGui import QPainter, QMouseEvent, QColor
-from PyQt5.QtCore import Qt, QTimer, QPoint, QLineF
+from PyQt5.QtCore import Qt, QTimer, QPoint
 
 from SimEngine import RenderEngine
 
 class UIController:
+    """
+    Class hanlding the control state machine for all graphical interfaces
+    """
     def __init__(self, mainArea, simEngine, renderEngine, aliases):
         self.mainArea = mainArea
         self.simEngine = simEngine
@@ -27,10 +35,16 @@ class UIController:
         self.selectedListObject = item.text()
 
     def createObject(self):
+        """
+        Creates and spawns a new object under the cursor
+        """
         if not self.editMode:
             return
 
-        delta = QPoint(self.drawArea.dragPosition - self.drawArea.dragStartPosition)
+        p1 = self.drawArea.dragStartPosition
+        p2 = self.drawArea.dragPosition
+
+        delta = QPoint(p2 - p1)
         angle = math.degrees(math.atan2(delta.y(), delta.x()))
 
         length = math.hypot(delta.x(), delta.y())
@@ -41,21 +55,15 @@ class UIController:
         dy = -width * math.cos(math.radians(angle)) # Change in y for height
 
         # Calculate bottom corners
-        x1 = self.drawArea.dragStartPosition.x()
-        y1 = self.drawArea.dragStartPosition.y()
-        x2 = self.drawArea.dragPosition.x()
-        y2 = self.drawArea.dragPosition.y()
-        x4, y4 = x2 - dx, y2 - dy  # bottom-right
+        x4, y4 = p2.x() - dx, p2.y() - dy  # bottom-right
 
-        center_x = int((x1 + x4) / 2)
-        center_y = int((y1 + y4) / 2)
-
-        print (center_x, center_y, angle+90, length, width)
+        centerX = int((p1.x() + x4) / 2)
+        centerY = int((p1.y() + y4) / 2)
+        print (centerX, centerY, angle+90, length, width)
 
         if self.editMode:
             alias = self.aliases[self.selectedListObject]
-            tmp = alias.genObject([center_x, center_y],
-                                  angle)
+            tmp = alias.genObject([centerX, centerY], angle)
             if tmp.isResizable():
                 tmp.setDimensions(width, length)
             tmp.setAlias(alias)
@@ -63,10 +71,17 @@ class UIController:
             self.renderEngine.registerObject(alias.genRender(tmp))
 
     def drawSelectionShadow(self, painter):
+        """
+        Draw a shadow of the object we will create
+        """
         if (self.drawArea.dragStartPosition is None or
-            self.drawArea.dragPosition is None):
-                return
-        delta = QPoint(self.drawArea.dragPosition - self.drawArea.dragStartPosition)
+                self.drawArea.dragPosition is None):
+            return
+
+        p1 = self.drawArea.dragStartPosition
+        p2 = self.drawArea.dragPosition
+
+        delta = QPoint(p2 - p1)
         angle = math.degrees(math.atan2(delta.y(), delta.x()))
 
         length = math.hypot(delta.x(), delta.y())
@@ -77,12 +92,8 @@ class UIController:
         painter.setPen(Qt.black)
         painter.setBrush(QColor(255, 0, 0, 64))
 
-        #painter.rotate(self.parent.angle)
-
-        # Draw rectangle centered at origin
-
-        painter.drawRect(int(self.drawArea.dragStartPosition.x()),
-                         int(self.drawArea.dragStartPosition.y()),
+        painter.drawRect(int(p1.x()),
+                         int(p1.y()),
                          int(delta.x()),
                          int(delta.y()))
 
@@ -91,42 +102,29 @@ class UIController:
         painter.save()
         painter.setPen(Qt.black)
         painter.setBrush(QColor(0, 255, 0, 64))
-        line = QLineF(self.drawArea.dragStartPosition, self.drawArea.dragPosition)
-        painter.translate(int(self.drawArea.dragStartPosition.x()),
-                         int(self.drawArea.dragStartPosition.y()))
+        painter.translate(int(p1.x()), int(p1.y()))
         painter.rotate(angle)
         painter.drawRect(0, 0, int(length), int(width))
         painter.restore()
 
-        center = QPoint(self.drawArea.dragPosition + self.drawArea.dragStartPosition)/2
         # Calculate the perpendicular vector for height
         # Rotate 90 degrees clockwise
         dx = width * math.sin(math.radians(angle))  # Change in x for height
         dy = -width * math.cos(math.radians(angle)) # Change in y for height
 
         # Calculate bottom corners
-        x1 = self.drawArea.dragStartPosition.x()
-        y1 = self.drawArea.dragStartPosition.y()
-        x2 = self.drawArea.dragPosition.x()
-        y2 = self.drawArea.dragPosition.y()
-        x4, y4 = x2 - dx, y2 - dy  # bottom-right
+        x4, y4 = p2.x() - dx, p2.y() - dy  # bottom-right
 
-        center_x = int((x1 + x4) / 2)
-        center_y = int((y1 + y4) / 2)
+        centerX = int((p1.x() + x4) / 2)
+        centerY = int((p1.y() + y4) / 2)
 
-        painter.drawEllipse(QPoint(center_x, center_y), 1, 1)
-        #print (center_x, center_y, angle+90, length, width)
-
-        #if self.editMode:
-        #    alias = self.aliases["Wall"]
-        #    tmp = alias.genObject([center_x, center_y],
-        #                          angle+90,
-        #                          [length, width])
-        #    tmp.setAlias(alias)
-        #    self.simEngine.registerStaticObject(tmp)
-        #    self.renderEngine.registerObject(alias.genRender(tmp))
+        painter.drawEllipse(QPoint(centerX, centerY), 1, 1)
 
 class DrawWidget(QWidget):
+    """
+    This is the canvas for drawing the scenario. Do not add Qt5 elements
+    in here.
+    """
     def __init__(self, vehicle, renderEngine, controller):
         super().__init__()
         self.setMinimumSize(2000,2000)
@@ -164,6 +162,9 @@ class DrawWidget(QWidget):
             self.dragPosition = event.pos()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
+        """
+        Handles mouse release events
+        """
         if event.button() == Qt.LeftButton:
             print(self.controller)
             self.controller.createObject()
@@ -180,13 +181,15 @@ class MainWindow(QMainWindow):
     def __init__(self, vehicle, scenario, simEngine):
         super().__init__()
         self.setGeometry(100, 100, 800, 800)
-        self.angle = 0  # Initial rotation anglea
 
         self.vehicle = vehicle
         self.scenario = scenario
         self.simEngine = simEngine
 
         self.renderEngine = RenderEngine()
+
+        #Pylint is right this class contains a lot of attributes I need to
+        #refactor all theses classes (the upper ones above as well)
 
         menuBar = self.menuBar()
         fileMenu = menuBar.addMenu("&File")

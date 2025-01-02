@@ -1,9 +1,15 @@
+"""
+Module running all the physics of the simulation
+"""
 import threading
 import time
 
 from Utils import Vector2D
 
 class SimEngine:
+    """
+    The physics engine
+    """
     def __init__(self, interval=1.0/60):
         self.staticObjects = []
         self.dynamicObjects = []
@@ -19,6 +25,9 @@ class SimEngine:
         self.dynamicObjects.append(obj)
 
     def tickEngine(self, dt):
+        """
+        Main tick that updates all objects in the scenario
+        """
         for obj in self.dynamicObjects:
             obj.tick(dt)
 
@@ -58,6 +67,9 @@ class SimEngine:
         self.thread.start()
 
 class RenderEngine:
+    """
+    Render Engine that contains all the drawable objects
+    """
     def __init__(self):
         self.objects = []
         self.vehicles = []
@@ -69,6 +81,9 @@ class RenderEngine:
         self.vehicles.append(obj)
 
     def draw(self, painter):
+        """
+        Method that will draw all the object on the canvas
+        """
         for obj in self.objects:
             obj.drawMain(painter)
 

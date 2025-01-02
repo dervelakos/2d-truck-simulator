@@ -1,11 +1,13 @@
+"""
+Module containing the different types of renderers for scene objects
+"""
 from PyQt5.QtGui import QColor, QImage
 from PyQt5.QtCore import Qt
 
-class BasicRender:
-    def drawMain(self, painter):
-        pass
-
-class RectangleRender(BasicRender):
+class RectangleRender:
+    """
+    The most basic renderer. A rectangular square or image.
+    """
     def __init__(self, parent, data=None):
         self.parent = parent
 
@@ -19,6 +21,12 @@ class RectangleRender(BasicRender):
             self.image = None
 
     def drawRect(self, painter):
+        """
+        Draw a rectangle representing the object.
+
+        Args:
+            painter (QPainter): the painter to draw with
+        """
         painter.save()
 
         painter.setPen(Qt.black)
@@ -37,7 +45,7 @@ class RectangleRender(BasicRender):
 
     def drawImage(self, painter):
         """
-        Draws the truck on the GUI.
+        Draws the image of the object.
 
         Args:
             painter (QPainter): the painter to draw with
@@ -140,7 +148,7 @@ class SimpleVehicleRender:
 
         Args:
             painter (QPainter): the painter to draw with
-            color (float): color of the axles
+            color (QColor): color of the axles
         """
         painter.save()
 
@@ -177,6 +185,9 @@ class SimpleVehicleRender:
         '''
             Draws the front wheels. Must be called from the rear axle
             transformation to work correctly.
+
+        Args:
+            painter (QPainter): the painter to draw with
         '''
 
         #painter.save()
@@ -208,6 +219,9 @@ class SimpleVehicleRender:
         '''
         Draws the rears wheels. Must be called from the rear axle
         transformation to work correctly.
+
+        Args:
+            painter (QPainter): the painter to draw with
         '''
         #painter.drawLine(0,-1000,0,1000)
 

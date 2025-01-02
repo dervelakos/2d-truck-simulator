@@ -1,3 +1,7 @@
+"""
+Module containing a more complex scene object and thus seperated from the rest
+"""
+
 import math
 
 from SceneObjects import SceneObject
@@ -8,8 +12,8 @@ class Vehicle(SceneObject):
     """
     A class representing a vehicle.
     """
-    def __init__(self, initialPos, rotation, dimensions=[0, 0], data=None):
-        super().__init__(initialPos, rotation, dimensions)
+    def __init__(self, initialPos, rotation, data):
+        super().__init__(initialPos, rotation, data)
 
         self.inModel = InertialModel1D(mass=data["mass"],
                                        friction=data["friction"])
@@ -40,11 +44,11 @@ class Vehicle(SceneObject):
         self.boundOffset = Vector2D(self.wheelBase/2, 0)
 
     def setSteering(self, steering):
-        if steering > 1:
-            steering = 1
-        if steering < -1:
-            steering = -1
+        steering = min(steering, 1)
+        steering = max(steering, -1)
+
         self.steeringAngle = self.maxSteeringAngle * steering
+
     def getSteering(self):
         return self.steeringAngle / self.maxSteeringAngle
 
@@ -61,21 +65,21 @@ class Vehicle(SceneObject):
         #Instantaneous Center of Rotation
         if abs(self.steeringAngle) > 0.000001:
             #no steering
-            rads_steering = math.radians(self.steeringAngle)
-            icr_y = self.wheelBase / math.tan(rads_steering)
-            #print("icr_y", icr_y)
+            radSteering = math.radians(self.steeringAngle)
+            icrY = self.wheelBase / math.tan(radSteering)
+            #print("icrY", icrY)
 
-            delta_theta = (self.inModel.getSpeed() * 100 * dt) / icr_y  # Arc length formula
-
-            rx = (icr_y * math.cos(delta_theta)) - icr_y
-            ry = icr_y * math.sin(delta_theta)
+            # Arc length formula
+            deltaTheta = (self.inModel.getSpeed() * 100 * dt) / icrY
+            rx = (icrY * math.cos(deltaTheta)) - icrY
+            ry = icrY * math.sin(deltaTheta)
 
             if abs(self.inModel.getSpeed()) > 0.000001:
                 rads = math.radians(math.pi /2 - self.angle)
                 self.pos.y += rx * math.cos(rads) - ry * math.sin(rads)
                 self.pos.x += rx * math.sin(rads) + ry * math.cos(rads)
                 #self.pos += Vector2D(rx, ry).rotate(rads)
-                self.angle += math.degrees(delta_theta)
+                self.angle += math.degrees(deltaTheta)
 
         else:
             ry = self.inModel.getSpeed() * 100 * dt

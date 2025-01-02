@@ -2,7 +2,7 @@ import math
 import time
 import threading
 
-def line_line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
+def lineLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4):
     # Line-line intersection formula
     denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
     if denom == 0:
@@ -12,67 +12,65 @@ def line_line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
     u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom
 
     if 0 <= t <= 1 and 0 <= u <= 1:
-        intersection_x = x1 + t * (x2 - x1)
-        intersection_y = y1 + t * (y2 - y1)
-        return (intersection_x, intersection_y)
+        intersectionX = x1 + t * (x2 - x1)
+        intersectionY = y1 + t * (y2 - y1)
+        return (intersectionX, intersectionY)
 
     return None
 
-def distance_between_points(x1, y1, x2, y2):
+def distanceBetweenPoints(x1, y1, x2, y2):
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-def project_ray(ray_origin, ray_direction, axis):
+def projectRay(rayOrigin, rayDirection, axis):
     """Project a ray onto an axis."""
     # Normalize the ray direction
-    length = math.sqrt(ray_direction[0]**2 + ray_direction[1]**2)
-    normalized_direction = (ray_direction[0] / length, ray_direction[1] / length)
+    length = math.sqrt(rayDirection[0]**2 + rayDirection[1]**2)
+    normalizedDirection = (rayDirection[0] / length, rayDirection[1] / length)
 
     # Project the ray origin onto the axis
-    dot_product = ray_origin[0] * axis[0] + ray_origin[1] * axis[1]
-    projection_origin = dot_product
+    dotProduct = rayOrigin[0] * axis[0] + rayOrigin[1] * axis[1]
+    projectionOrigin = dotProduct
 
     # Project the ray direction onto the axis
-    dot_product = normalized_direction[0] * axis[0] + normalized_direction[1] * axis[1]
-    projection_direction = dot_product
+    dotProduct = normalizedDirection[0] * axis[0] + normalizedDirection[1] * axis[1]
+    projectionDirection = dotProduct
 
     # Return the projection range (min, max)
-    if projection_direction >= 0:
-        return (projection_origin, float('inf'))  # Ray extends infinitely in the positive direction
-    else:
-        return (float('-inf'), projection_origin)  # Ray extends infinitely in the negative direction
+    if projectionDirection >= 0:
+        # Ray extends infinitely in the positive direction
+        return (projectionOrigin, float('inf'))
+
+    # Ray extends infinitely in the negative direction
+    return (float('-inf'), projectionOrigin)
 
 def calculateIntersection(x, y, dirX, dirY, obj):
     corners = obj.getCorners()
-    lidar_end = (x + dirX, y + dirY)
+    lidarEnd = (x + dirX, y + dirY)
 
-    min_distance = float('inf')
-    collision_point = None
+    minDistance = float('inf')
+    collisionPoint = None
     #axis1 = (-axis[1], axis[0])
 
     for i in range(4):
-        edge_start = corners[i]
-        edge_end = corners[(i + 1) % 4]
+        edgeStart = corners[i]
+        edgeEnd = corners[(i + 1) % 4]
 
-        #edgeX = end[0] - start[0]
-        #edgeY = end[1] - start[1]
-
-        intersection = line_line_intersection(
+        intersection = lineLineIntersection(
             x, y,
-            lidar_end[0], lidar_end[1],
-            edge_start[0], edge_start[1],
-            edge_end[0], edge_end[1]
+            lidarEnd[0], lidarEnd[1],
+            edgeStart[0], edgeStart[1],
+            edgeEnd[0], edgeEnd[1]
         )
 
         if intersection:
-            dist = distance_between_points(x, y, intersection[0], intersection[1])
-            if dist < min_distance and dist <= 1000: #maxLen
-                min_distance = dist
-                collision_point = intersection
+            dist = distanceBetweenPoints(x, y, intersection[0], intersection[1])
+            if dist < minDistance and dist <= 1000: #maxLen
+                minDistance = dist
+                collisionPoint = intersection
 
-    if collision_point:
-        return min_distance
-    else:
-        return None
+    if collisionPoint:
+        return minDistance
+    return None
 
 class Lidar:
     def __init__(self, simEngine, vehicle, rosNode=None,
@@ -94,6 +92,7 @@ class Lidar:
             rayAngleRad = math.radians(angle + i * self.rayAngleIncrement)
 
             #Ray Direction
+            #1000 is the maximum length of the lidar
             dirX = math.cos(rayAngleRad) * 1000
             dirY = math.sin(rayAngleRad) * 1000
 
