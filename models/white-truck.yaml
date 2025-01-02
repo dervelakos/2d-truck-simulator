@@ -2,6 +2,8 @@
 width: 93.75
 length: 421.5
 
+resizable: False
+
 mass: 100.0
 friction: 200.0
 

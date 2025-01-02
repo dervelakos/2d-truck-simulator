@@ -1,16 +1,104 @@
 aliases:
-- name: Wall
-  model: null
+- model: models/wall.yaml
+  name: Wall
   render: RectangleRender
-  type: Wall
-- name: Vehicle
-  model: null
+  type: SceneObject
+- model: models/car.yaml
+  name: Car
   render: SimpleVehicleRender
   type: Vehicle
-- name: WhiteTruck
-  model: "models/white-truck.yaml"
+- model: models/white-truck.yaml
+  name: WhiteTruck
   render: SimpleVehicleRender
   type: Vehicle
 objects:
   dynamic: []
-  static: []
+  static:
+  - alias: Wall
+    angle: -0.06200839517698959
+    dim:
+    - 10
+    - 924.0005411253827
+    loc:
+    - 1050.0
+    - 197.0
+  - alias: Wall
+    angle: 89.83582916128299
+    dim:
+    - 10
+    - 698.0028653236318
+    loc:
+    - 1508.0
+    - 542.0
+  - alias: Wall
+    angle: -179.72716501693193
+    dim:
+    - 10
+    - 1050.0119046944183
+    loc:
+    - 987.0
+    - 863.0
+  - alias: Wall
+    angle: -90.22872445172517
+    dim:
+    - 10
+    - 501.0039920000638
+    loc:
+    - 465.0
+    - 613.0
+  - alias: Car
+    angle: -90.94695144677347
+    dim:
+    - 80.0
+    - 150.0
+    loc:
+    - 1467.0
+    - 764.0
+  - alias: Car
+    angle: -93.46822925891715
+    dim:
+    - 80.0
+    - 150.0
+    loc:
+    - 1469.0
+    - 336.0
+  - alias: Car
+    angle: -179.11859600341788
+    dim:
+    - 80.0
+    - 150.0
+    loc:
+    - 1280.0
+    - 804.0
+  - alias: Car
+    angle: 180.0
+    dim:
+    - 80.0
+    - 150.0
+    loc:
+    - 1013.0
+    - 806.0
+  - alias: Car
+    angle: 179.38394009160078
+    dim:
+    - 80.0
+    - 150.0
+    loc:
+    - 685.0
+    - 796.0
+  - alias: WhiteTruck
+    angle: 179.30130561701654
+    dim:
+    - 93.75
+    - 421.5
+    loc:
+    - 1130.0
+    - 531.0
+  - alias: WhiteTruck
+    angle: 179.83440572259718
+    dim:
+    - 93.75
+    - 421.5
+    loc:
+    - 999.0
+    - 368.0

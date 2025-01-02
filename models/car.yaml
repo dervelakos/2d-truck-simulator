@@ -1,6 +1,8 @@
 width: 80.0
 length: 150.0
 
+resizable: False
+
 mass: 20.0
 friction: 25.0
 

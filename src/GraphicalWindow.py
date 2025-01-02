@@ -55,8 +55,9 @@ class UIController:
         if self.editMode:
             alias = self.aliases[self.selectedListObject]
             tmp = alias.genObject([center_x, center_y],
-                                  angle+90,
-                                  [length, width])
+                                  angle)
+            if tmp.isResizable():
+                tmp.setDimensions(width, length)
             tmp.setAlias(alias)
             self.simEngine.registerStaticObject(tmp)
             self.renderEngine.registerObject(alias.genRender(tmp))

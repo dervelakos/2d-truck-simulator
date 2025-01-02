@@ -1,0 +1,6 @@
+color: [255, 100, 50, 255]  # Compressed format
+
+width: 10.0
+length: 100.0
+
+resizable: True

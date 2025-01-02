@@ -5,10 +5,12 @@ class BasicRender:
     def drawMain(self, painter):
         pass
 
-class RectangleRender:
-    def __init__(self, parent, color=QColor(0, 255, 0), data=None):
+class RectangleRender(BasicRender):
+    def __init__(self, parent, data=None):
         self.parent = parent
-        self.color = color
+
+        if 'color' in data:
+            self.color = QColor(*data['color'])
 
         if data and 'image' in data:
             self.image = QImage(data["image"]).scaled(int(self.parent.length),
@@ -53,8 +55,6 @@ class RectangleRender:
         painter.drawImage(int(-self.parent.length/2),
                          int(-self.parent.width/2),
                          self.image)
-                         #sw=int(self.parent.length),
-                         #sh=int(self.parent.width))
 
         painter.restore()
 

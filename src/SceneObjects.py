@@ -3,14 +3,21 @@ import math
 from Utils import Vector2D
 
 class SceneObject:
-    def __init__(self, initialPos, rotation, dimensions, data=None):
+    def __init__(self, initialPos, rotation, data):
 
         self.pos = Vector2D(initialPos[0], initialPos[1])
         self.angle = rotation
 
         #We support only rectanglular objects :P
-        self.width = dimensions[0]
-        self.length = dimensions[1]
+        if 'width' in data:
+            self.width = data['width']
+        if 'length' in data:
+            self.width = data['length']
+
+        if 'resizable' in data:
+            self.resizable = data['resizable']
+        else:
+            self.resizable = False
 
         self.boundOffset = Vector2D(0.0, 0.0)
 
@@ -32,11 +39,20 @@ class SceneObject:
     def getAngle(self):
         return self.angle
 
+    def isResizable(self):
+        return self.resizable
+
     def setAlias(self, alias):
         self.alias = alias
 
     def getAlias(self):
         return self.alias
+
+    def setDimensions(self, width=None, length=None):
+        if width:
+            self.width = width
+        if length:
+            self.length = length
 
     def getCorners(self):
         """
@@ -196,6 +212,6 @@ class SceneObject:
     def __str__(self):
         return f"x:{self.x}, y: {self.y}, angle: {self.angle}, width: {self.width}, length: {self.length}"
 
-class Wall(SceneObject):
-    def __init__(self, initialPos, rotation, dimensions=[100.0, 10.0]):
-        super().__init__(initialPos, rotation, dimensions)
+#class Wall(SceneObject):
+#    def __init__(self, initialPos, rotation, dimensions=[100.0, 10.0]):
+#        super().__init__(initialPos, rotation, dimensions)

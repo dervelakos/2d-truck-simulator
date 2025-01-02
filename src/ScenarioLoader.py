@@ -18,10 +18,10 @@ class Alias:
         else:
             self.data = None
 
-    def genObject(self, loc, angle, dim):
+    def genObject(self, loc, angle):
         if self.data:
-            return globals()[self.classType](loc, angle, dim, data=self.data)
-        return globals()[self.classType](loc, angle, dim)
+            return globals()[self.classType](loc, angle, data=self.data)
+        return globals()[self.classType](loc, angle)
 
     def genRender(self, obj):
         if self.data:
@@ -108,7 +108,8 @@ class ScenarioLoader:
             for obj in self.data['objects']['static']:
                 print (obj)
                 alias = self.aliases[obj['alias']]
-                tmp = alias.genObject(obj['loc'], obj['angle'], obj['dim'])
+                tmp = alias.genObject(obj['loc'], obj['angle'])
+                tmp.setDimensions(obj['dim'][0],obj['dim'][1])
                 tmp.setAlias(alias)
                 simEngine.registerStaticObject(tmp)
                 if renderEngine is None:

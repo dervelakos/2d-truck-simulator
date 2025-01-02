@@ -8,7 +8,6 @@ import argparse
 from PyQt5.QtWidgets import QApplication
 
 from VehicleRender import SimpleVehicleRender, RectangleRender
-from SceneObjects import Wall
 from Vehicle import Vehicle
 from VehicleImporter import easyImport
 from Sensors import Lidar
