@@ -5,37 +5,47 @@ from VehicleRender import *
 from Vehicle import Vehicle
 
 class Alias:
-    #TODO: This initialization is too redudant simplify it
-    def __init__(self, classType, model, render, name):
-        self.classType = classType
-        self.model = model
-        self.render = render
-        self.name = name
+    def __init__(self, aliasData):
+        self.aliasData = aliasData
+        self.data = None
 
-        if self.model:
-            with open(self.model, "r") as file:
+    def isValid(self):
+        """
+        Minimum viable configuration
+        """
+        if 'type' not in self.aliasData:
+            return False
+        if 'name' not in self.aliasData:
+            return False
+        if 'render' not in self.aliasData:
+            return False
+        if 'model' not in self.aliasData:
+            return False
+        return True
+
+    def getModelData(self):
+        if self.data is None:
+            with open(self.aliasData['model'], "r") as file:
                 self.data = yaml.safe_load(file)
-        else:
-            self.data = None
+        return self.data
 
     def genObject(self, loc, angle):
-        if self.data:
-            return globals()[self.classType](loc, angle, data=self.data)
-        return globals()[self.classType](loc, angle)
+        modelData = self.getModelData()
+        if modelData:
+            return globals()[self.aliasData['type']](loc, angle, data=modelData)
+        return globals()[self.aliasData['type']](loc, angle)
 
     def genRender(self, obj):
-        if self.data:
-            return globals()[self.render](obj, data=self.data)
-        return globals()[self.render](obj)
+        modelData = self.getModelData()
+        if modelData:
+            return globals()[self.aliasData['render']](obj, data=modelData)
+        return globals()[self.aliasData['render']](obj)
 
     def getName(self):
-        return self.name
+        return self.aliasData['name']
 
     def getDict(self):
-        return {"type": self.classType,
-                "model": self.model,
-                "render": self.render,
-                "name": self.name}
+        return self.aliasData
 
 class ScenarioLoader:
     def __init__(self, scenarioName):
@@ -45,23 +55,18 @@ class ScenarioLoader:
         self.aliases = {}
 
         self.createAliases()
+        self.loadingErrors = False
 
     def createAliases(self):
         if "aliases" not in self.data:
             return
 
-        for alias in self.data["aliases"]:
-            if ("type" not in alias or
-               "model" not in alias or
-               "name" not in alias or
-               "render" not in alias):
-                   print("Could not read alias (missing type or name).")
-                   continue
-            self.aliases[alias['name']] = Alias(
-                    alias["type"],
-                    alias["model"],
-                    alias["render"],
-                    alias["name"])
+        for aliasData in self.data["aliases"]:
+            aliasObj = Alias(aliasData);
+            if aliasObj.isValid():
+                self.aliases[aliasObj.getName()] = aliasObj
+            else:
+                self.loadingError = True
 
     def getAliases(self):
         return self.aliases
@@ -98,6 +103,12 @@ class ScenarioLoader:
     def saveAsScenario(self, scenarioName, simEngine):
         d = {"aliases": self.getYamlAliasses(),
              "objects": self.getYamlObjects(simEngine)}
+
+        #In case of a loading error prevent saving that could corrupt the scenario
+        if scenarioName == self.scenarioName and self.loadingErrors:
+            print("Scenario contains loading errors, saving on the same file is not permitted!")
+            return
+
         with open(scenarioName, 'w') as file:
             yaml.dump(d, file, default_flow_style=False)
 
