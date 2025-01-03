@@ -99,21 +99,21 @@ class ScenarioLoader:
         Generate yaml structure for all the aliases
         """
         aliasses = []
-        for alias, _ in self.aliases.items():
+        for _, alias in self.aliases.items():
             aliasses.append(alias.getDict())
 
         return aliasses
 
-    def getYamlStaticObjects(self, simEngine):
+    def genYamlObjects(self, objects):
         """
         Generate yaml structure for all the static objects
         """
-        staticObjects = []
+        yamlObjects = []
 
-        for obj in simEngine.getStaticObjects():
-            staticObjects.append(obj.toDict())
+        for obj in objects:
+            yamlObjects.append(obj.toDict())
 
-        return staticObjects
+        return yamlObjects
 
     def getYamlObjects(self, simEngine):
         """
@@ -123,8 +123,8 @@ class ScenarioLoader:
 
         dynamicObjects = []
 
-        objects["static"] = self.getYamlStaticObjects(simEngine)
-        objects["dynamic"] = dynamicObjects
+        objects["static"] = self.genYamlObjects(simEngine.getStaticObjects())
+        objects["dynamic"] = self.genYamlObjects(simEngine.getDynamicObjects())
 
         return objects
 
@@ -154,6 +154,7 @@ class ScenarioLoader:
 
         if 'name' in obj:
             self.namedObjects[obj['name']]=tmp
+            tmp.setObjectName(obj['name'])
 
         return tmp, alias
 

@@ -47,6 +47,9 @@ class SimEngine:
     def getStaticObjects(self):
         return self.staticObjects
 
+    def getDynamicObjects(self):
+        return self.dynamicObjects
+
     def getAllObjects(self):
         return self.staticObjects + self.dynamicObjects
 

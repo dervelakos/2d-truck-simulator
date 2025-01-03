@@ -28,12 +28,23 @@ class SceneObject:
         self.boundOffset = Vector2D(0.0, 0.0)
 
         self.alias = None #Alias used for loading
+        self.objectName = None
 
     def toDict(self):
-        return {"alias": self.alias.getName(),
-                "loc": [self.pos.x, self.pos.y],
-                "angle": self.angle,
-                "dim": [self.width, self.length]}
+        dictData = {
+            "alias": self.alias.getName(),
+            "loc": [self.pos.x, self.pos.y],
+            "angle": self.angle,
+            "dim": [self.width, self.length]
+        }
+
+        if self.objectName:
+            dictData["name"] = self.objectName
+
+        return dictData
+
+    def setObjectName(self, name):
+        self.objectName = name
 
     def getCenter(self):
         rad = math.radians(self.angle)
