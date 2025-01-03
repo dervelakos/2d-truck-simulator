@@ -125,11 +125,10 @@ class DrawWidget(QWidget):
     This is the canvas for drawing the scenario. Do not add Qt5 elements
     in here.
     """
-    def __init__(self, vehicle, renderEngine, controller):
+    def __init__(self, renderEngine, controller):
         super().__init__()
         self.setMinimumSize(2000,2000)
 
-        self.vehicle = vehicle
         self.renderEngine = renderEngine
 
         self.dragging = False
@@ -178,11 +177,11 @@ class MainWindow(QMainWindow):
     """
     The GUI window for displaying the simualtor state
     """
-    def __init__(self, vehicle, scenario, simEngine):
+    def __init__(self, scenario, simEngine):
         super().__init__()
         self.setGeometry(100, 100, 800, 800)
 
-        self.vehicle = vehicle
+        self.vehicle = None
         self.scenario = scenario
         self.simEngine = simEngine
 
@@ -221,7 +220,7 @@ class MainWindow(QMainWindow):
                                        self.scenario.getAliases())
 
         # Create a widget to hold the content
-        self.contentWidget = DrawWidget(vehicle, self.renderEngine, self.controller)
+        self.contentWidget = DrawWidget(self.renderEngine, self.controller)
 
         # Set the content widget to the scroll area
         self.scrollArea.setWidget(self.contentWidget)
@@ -253,6 +252,9 @@ class MainWindow(QMainWindow):
     def getRenderEngine(self):
         return self.renderEngine
 
+    def setMainVehicle(self, vehicle):
+        self.vehicle = vehicle
+
     def enableEditMode(self):
         status = self.controller.toggleEditMode()
         print("Edit Mode Enabled", status)
@@ -263,6 +265,10 @@ class MainWindow(QMainWindow):
 
     def updateRotation(self):
         self.contentWidget.update()    # Request repaint
+
+        if self.vehicle is None:
+            return
+
         self.scrollArea.ensureVisible(int(self.vehicle.pos.x),
                                       int(self.vehicle.pos.y),
                                       300,
@@ -274,6 +280,8 @@ class MainWindow(QMainWindow):
         """
         #if event.isAutoRepeat():
         #    return  # Ignore auto-repeat events
+        if self.vehicle is None:
+            return
 
         if event.key() == Qt.Key_W:
             self.vehicle.setThrottle(1)
@@ -292,6 +300,8 @@ class MainWindow(QMainWindow):
         """
         #if event.isAutoRepeat():
         #    return  # Ignore auto-repeat events
+        if self.vehicle is None:
+            return
 
         if event.key() == Qt.Key_W:
             self.vehicle.setThrottle(0)

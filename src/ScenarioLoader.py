@@ -70,6 +70,8 @@ class ScenarioLoader:
         self.createAliases()
         self.loadingErrors = False
 
+        self.namedObjects = {}
+
     def createAliases(self):
         """
         Parse all the alises from the yaml file
@@ -86,6 +88,11 @@ class ScenarioLoader:
 
     def getAliases(self):
         return self.aliases
+
+    def getNamedObject(self, name):
+        if name in self.namedObjects:
+            return self.namedObjects[name]
+        return None
 
     def getYamlAliasses(self):
         """
@@ -139,6 +146,17 @@ class ScenarioLoader:
         with open(scenarioName, 'w', encoding="utf-8") as file:
             yaml.dump(d, file, default_flow_style=False)
 
+    def loadObject(self, obj):
+        alias = self.aliases[obj['alias']]
+        tmp = alias.genObject(obj['loc'], obj['angle'])
+        tmp.setDimensions(obj['dim'][0],obj['dim'][1])
+        tmp.setAlias(alias)
+
+        if 'name' in obj:
+            self.namedObjects[obj['name']]=tmp
+
+        return tmp, alias
+
     def instantiateScenario(self, simEngine, renderEngine):
         """
         Loads all the objects of the scenario into the engines
@@ -148,11 +166,16 @@ class ScenarioLoader:
         if 'static' in self.data['objects']:
             for obj in self.data['objects']['static']:
                 print (obj)
-                alias = self.aliases[obj['alias']]
-                tmp = alias.genObject(obj['loc'], obj['angle'])
-                tmp.setDimensions(obj['dim'][0],obj['dim'][1])
-                tmp.setAlias(alias)
+                tmp, alias = self.loadObject(obj)
                 simEngine.registerStaticObject(tmp)
+                if renderEngine is None:
+                    continue
+                renderEngine.registerObject(alias.genRender(tmp))
+        if 'dynamic' in self.data['objects']:
+            for obj in self.data['objects']['dynamic']:
+                print (obj)
+                tmp, alias = self.loadObject(obj)
+                simEngine.registerDynamicObject(tmp)
                 if renderEngine is None:
                     continue
                 renderEngine.registerObject(alias.genRender(tmp))

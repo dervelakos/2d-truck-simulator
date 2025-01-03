@@ -53,9 +53,6 @@ class RectangleRender:
         # Set the color and draw the rectangle
         painter.save()
 
-        painter.setPen(Qt.black)
-        painter.setBrush(self.color)
-
         painter.translate(int(self.parent.pos.x), int(self.parent.pos.y))
         painter.rotate(self.parent.angle)
         # Draw rectangle centered at origin
@@ -140,6 +137,7 @@ class SimpleVehicleRender:
 
     def drawMain(self, painter):
         self.drawVehicle(painter)
+        self.drawAxles(painter)
 
     def drawAxles(self, painter, color=Qt.black):
         """

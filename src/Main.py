@@ -57,23 +57,29 @@ if __name__ == '__main__':
     scenario = ScenarioLoader(args.scenario)
 
     #Create Vehicle
-    truck, truckRender = easyImport(args.model)
-    truck.pos = Vector2D(100, 100)
+    #truck, truckRender = easyImport(args.model)
+    #truck.pos = Vector2D(100, 100)
+
+    #SIM_ENGINE.registerDynamicObject(truck)
+    #if args.graphics:
+    #    window.getRenderEngine().registerVehicle(truckRender)
 
     if args.graphics:
         app = QApplication(sys.argv)
-        window = MainWindow(truck, scenario, SIM_ENGINE)
-
-    SIM_ENGINE.registerDynamicObject(truck)
-    if args.graphics:
-        window.getRenderEngine().registerVehicle(truckRender)
-
-    if args.ros:
-        ROS_NODE = RosNode(truck, "vehicle1")
-    #Lidar
-    LIDAR = Lidar(SIM_ENGINE, truck, rosNode=ROS_NODE)
+        window = MainWindow(scenario, SIM_ENGINE)
 
     scenario.instantiateScenario(SIM_ENGINE, window.getRenderEngine())
+    vehicle = scenario.getNamedObject("MainVehicle")
+    if vehicle is None:
+        print("No MainVehicle was found.")
+        exit
+
+    window.setMainVehicle(vehicle)
+
+    if args.ros:
+        ROS_NODE = RosNode(vehicle, "vehicle1")
+    #Lidar
+    LIDAR = Lidar(SIM_ENGINE, vehicle, rosNode=ROS_NODE)
 
     SIM_ENGINE.startThreaded()
     if ROS_NODE:

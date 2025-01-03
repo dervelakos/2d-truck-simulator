@@ -72,13 +72,9 @@ class RenderEngine:
     """
     def __init__(self):
         self.objects = []
-        self.vehicles = []
 
     def registerObject(self, obj):
         self.objects.append(obj)
-
-    def registerVehicle(self, obj):
-        self.vehicles.append(obj)
 
     def draw(self, painter):
         """
@@ -86,7 +82,3 @@ class RenderEngine:
         """
         for obj in self.objects:
             obj.drawMain(painter)
-
-        for obj in self.vehicles:
-            obj.drawVehicle(painter)
-            obj.drawAxles(painter)

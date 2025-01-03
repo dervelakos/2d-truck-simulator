@@ -5,14 +5,27 @@ aliases:
   type: SceneObject
 - model: models/car.yaml
   name: Car
+  render: RectangleRender
+  type: Vehicle
+- model: models/car.yaml
+  name: DrivableCar
   render: SimpleVehicleRender
   type: Vehicle
 - model: models/white-truck.yaml
   name: WhiteTruck
-  render: SimpleVehicleRender
+  render: RectangleRender
   type: Vehicle
 objects:
-  dynamic: []
+  dynamic:
+  - alias: DrivableCar
+    name: MainVehicle
+    angle: 0
+    dim:
+    - 80.0
+    - 150.0
+    loc:
+    - 100.0
+    - 100.0
   static:
   - alias: Wall
     angle: -0.06200839517698959
