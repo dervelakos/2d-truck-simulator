@@ -3,7 +3,7 @@ import math
 import threading
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist, Pose
+from geometry_msgs.msg import Twist, Pose, PoseStamped
 from std_msgs.msg import Header
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
@@ -32,6 +32,12 @@ class TwistSubscriber(Node):
             Pose,
             topicPrefix + '/pose',
             10)
+
+        self.icrPublisher = self.create_publisher(
+            PoseStamped,
+            topicPrefix + '/icr',
+            10)
+
 
         self.odomPublisher = self.create_publisher(
             Odometry,
@@ -102,6 +108,33 @@ class TwistSubscriber(Node):
 
         self.posePublisher.publish(msg)
 
+    def publishIcr(self):
+        msg = PoseStamped()
+        msg.header = Header()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "base_link"
+
+        radSteering = math.radians(self.vehicle.steeringAngle)
+        if radSteering == 0:
+            return
+        icrY = self.vehicle.wheelBase / math.tan(radSteering)
+
+        rads = math.radians(math.pi /2 - self.vehicle.angle)
+        pIcrX = 0 * math.cos(rads) - icrY * math.sin(rads)
+        pIcrY = 0 * math.sin(rads) + icrY * math.cos(rads)
+        print(f"ICR: {pIcrX}, {pIcrY}")
+        msg.pose.position.x = pIcrY/100
+        msg.pose.position.y = pIcrX/100
+        msg.pose.position.z = float(0)
+
+        q = euler_to_quaternion(0, math.radians(-90), 0)
+        msg.pose.orientation.x = q[0]
+        msg.pose.orientation.y = q[1]
+        msg.pose.orientation.z = q[2]
+        msg.pose.orientation.w = q[3]
+
+        self.icrPublisher.publish(msg)
+
     def publishLidar(self, scan, lidar, angle, scanTime):
         msg = LaserScan()
         msg.header = Header()
@@ -128,6 +161,7 @@ class TwistSubscriber(Node):
 
     def timerCallback(self):
         #self.publishPose()
+        self.publishIcr()
         self.publishOdometry()
         self.broadcastTransform()
 

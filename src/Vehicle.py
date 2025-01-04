@@ -67,7 +67,7 @@ class Vehicle(SceneObject):
             #no steering
             radSteering = math.radians(self.steeringAngle)
             icrY = self.wheelBase / math.tan(radSteering)
-            #print("icrY", icrY)
+            print("icrY", icrY)
 
             # Arc length formula
             deltaTheta = (self.inModel.getSpeed() * 100 * dt) / icrY
@@ -80,6 +80,11 @@ class Vehicle(SceneObject):
                 self.pos.x += rx * math.sin(rads) + ry * math.cos(rads)
                 #self.pos += Vector2D(rx, ry).rotate(rads)
                 self.angle += math.degrees(deltaTheta)
+
+            rads = math.radians(math.pi /2 - self.angle)
+            pIcrX = 0 * math.cos(rads) - icrY * math.sin(rads)
+            pIcrY = 0 * math.sin(rads) + icrY * math.cos(rads)
+            print(f"ICR: {pIcrX}, {pIcrY}")
 
         else:
             ry = self.inModel.getSpeed() * 100 * dt
