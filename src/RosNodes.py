@@ -112,19 +112,21 @@ class TwistSubscriber(Node):
         msg = PoseStamped()
         msg.header = Header()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "base_link"
+        msg.header.frame_id = "odom"
 
         radSteering = math.radians(self.vehicle.steeringAngle)
         if radSteering == 0:
             return
         icrY = self.vehicle.wheelBase / math.tan(radSteering)
 
-        rads = math.radians(math.pi /2 - self.vehicle.angle)
+        rads = math.radians(self.vehicle.angle)
         pIcrX = 0 * math.cos(rads) - icrY * math.sin(rads)
         pIcrY = 0 * math.sin(rads) + icrY * math.cos(rads)
         print(f"ICR: {pIcrX}, {pIcrY}")
-        msg.pose.position.x = pIcrY/100
-        msg.pose.position.y = pIcrX/100
+        #msg.pose.position.x = pIcrY/100
+        #msg.pose.position.y = pIcrX/100
+        msg.pose.position.x = (self.vehicle.pos.x + pIcrX)/100
+        msg.pose.position.y = (self.vehicle.pos.y + pIcrY)/100
         msg.pose.position.z = float(0)
 
         q = euler_to_quaternion(0, math.radians(-90), 0)
