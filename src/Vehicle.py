@@ -71,13 +71,13 @@ class Vehicle(SceneObject):
 
             # Arc length formula
             deltaTheta = (self.inModel.getSpeed() * 100 * dt) / icrY
-            rx = (icrY * math.cos(deltaTheta)) - icrY
-            ry = icrY * math.sin(deltaTheta)
+            ry = (icrY * math.cos(deltaTheta)) - icrY
+            rx = icrY * math.sin(deltaTheta)
 
             if abs(self.inModel.getSpeed()) > 0.000001:
-                rads = math.radians(math.pi /2 - self.angle)
-                self.pos.y += rx * math.cos(rads) - ry * math.sin(rads)
-                self.pos.x += rx * math.sin(rads) + ry * math.cos(rads)
+                rads = math.radians(self.angle)
+                self.pos.x += rx * math.cos(rads) - ry * math.sin(rads)
+                self.pos.y += rx * math.sin(rads) + ry * math.cos(rads)
                 #self.pos += Vector2D(rx, ry).rotate(rads)
                 self.angle += math.degrees(deltaTheta)
 
@@ -87,12 +87,12 @@ class Vehicle(SceneObject):
             print(f"ICR: {pIcrX}, {pIcrY}")
 
         else:
-            ry = self.inModel.getSpeed() * 100 * dt
-            rx = 0
+            rx = self.inModel.getSpeed() * 100 * dt
+            ry = 0
 
-            rads = math.radians(math.pi /2 - self.angle)
-            self.pos.y += rx * math.cos(rads) - ry * math.sin(rads)
-            self.pos.x += rx * math.sin(rads) + ry * math.cos(rads)
+            rads = math.radians(self.angle)
+            self.pos.x += rx * math.cos(rads) - ry * math.sin(rads)
+            self.pos.y += rx * math.sin(rads) + ry * math.cos(rads)
             #self.pos += Vector2D(rx, ry).rotate(rads)
 
     def getSpeed(self):
