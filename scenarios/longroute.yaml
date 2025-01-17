@@ -1,0 +1,181 @@
+aliases:
+- model: models/wall.yaml
+  name: Wall
+  render: RectangleRender
+  type: SceneObject
+- model: models/car.yaml
+  name: Car
+  render: RectangleRender
+  type: Vehicle
+- model: models/car.yaml
+  name: DrivableCar
+  render: SimpleVehicleRender
+  type: Vehicle
+- model: models/white-truck.yaml
+  name: WhiteTruck
+  render: RectangleRender
+  type: Vehicle
+objects:
+  dynamic:
+  - alias: DrivableCar
+    angle: -629.8353767105344
+    dim:
+    - 80.0
+    - 150.0
+    loc:
+    - 117.61635507033547
+    - 103.49138391295983
+    name: MainVehicle
+  static:
+  - alias: Wall
+    angle: 89.93765423623563
+    dim:
+    - 10
+    - 919.0005440694798
+    loc:
+    - 13.0
+    - 477.0
+  - alias: Wall
+    angle: -0.3304218243162126
+    dim:
+    - 10
+    - 1734.0288348236888
+    loc:
+    - 884.0
+    - 19.0
+  - alias: Wall
+    angle: 87.36098016615192
+    dim:
+    - 10
+    - 499.5297788921097
+    loc:
+    - 239.0
+    - 320.0
+  - alias: Wall
+    angle: 88.27548672146638
+    dim:
+    - 10
+    - 465.21070494991835
+    loc:
+    - 13.0
+    - 1173.0
+  - alias: Wall
+    angle: 89.08626918411288
+    dim:
+    - 10
+    - 627.0797397460709
+    loc:
+    - 247.0
+    - 882.0
+  - alias: Wall
+    angle: 0.06837201947086552
+    dim:
+    - 10
+    - 1676.0011933169976
+    loc:
+    - 865.0
+    - 1408.0
+  - alias: Wall
+    angle: -90.87245712290203
+    dim:
+    - 10
+    - 788.0913652616681
+    loc:
+    - 571.0
+    - 1002.0
+  - alias: Wall
+    angle: 69.22774531795417
+    dim:
+    - 10
+    - 31.016124838541646
+    loc:
+    - 224.0
+    - 50.0
+  - alias: Wall
+    angle: -86.62310864680502
+    dim:
+    - 10
+    - 322.56007192459515
+    loc:
+    - 575.0
+    - 442.0
+  - alias: Wall
+    angle: -4.070366373224806
+    dim:
+    - 10
+    - 803.0255288594504
+    loc:
+    - 980.0
+    - 257.0
+  - alias: Wall
+    angle: 89.71433964857238
+    dim:
+    - 10
+    - 1404.0174500340086
+    loc:
+    - 1749.0
+    - 710.0
+  - alias: Wall
+    angle: -173.418055344822
+    dim:
+    - 10
+    - 52.3450093132096
+    loc:
+    - 1721.0
+    - 1404.0
+  - alias: Wall
+    angle: 88.85070180382407
+    dim:
+    - 10
+    - 648.1303881164654
+    loc:
+    - 1396.0
+    - 812.0
+  - alias: Wall
+    angle: 179.10946374663942
+    dim:
+    - 10
+    - 386.0466293079115
+    loc:
+    - 1205.0
+    - 1133.0
+  - alias: Wall
+    angle: -87.32698739026718
+    dim:
+    - 10
+    - 664.7232506840722
+    loc:
+    - 823.0
+    - 1062.0
+  - alias: Wall
+    angle: -76.49573548348506
+    dim:
+    - 10
+    - 261.22212769977966
+    loc:
+    - 875.0
+    - 601.0
+  - alias: Wall
+    angle: 1.071937318329857
+    dim:
+    - 10
+    - 481.084192215874
+    loc:
+    - 1143.0
+    - 482.0
+  - alias: Wall
+    angle: -77.07400087529405
+    dim:
+    - 10
+    - 375.5156454796524
+    loc:
+    - 1060.0
+    - 946.0
+  - alias: Wall
+    angle: -26.56505117707799
+    dim:
+    - 10
+    - 2.23606797749979
+    loc:
+    - 1011.0
+    - 759.0
