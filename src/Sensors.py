@@ -74,7 +74,7 @@ def calculateIntersection(x, y, dirX, dirY, obj):
 
 class Lidar:
     def __init__(self, simEngine, vehicle, rosNode=None,
-                 numRays=360, rayAngleIncrement=1, interval=1/60):
+                 numRays=360, rayAngleIncrement=1, interval=2/60):
         self.numRays = numRays
         self.rayAngleIncrement = rayAngleIncrement
 

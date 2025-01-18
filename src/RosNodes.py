@@ -51,7 +51,7 @@ class TwistSubscriber(Node):
 
         self.tf_broadcaster = TransformBroadcaster(self)
 
-        self.timer = self.create_timer(0.5, self.timerCallback)
+        self.timer = self.create_timer(0.03, self.timerCallback)
 
     def broadcastTransform(self):
         # Broadcast TF
