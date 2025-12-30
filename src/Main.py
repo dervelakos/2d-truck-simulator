@@ -15,6 +15,8 @@ from SimEngine import SimEngine
 from GraphicalWindow import MainWindow
 from ScenarioLoader import ScenarioLoader
 
+from CommNode import VehicleNode
+
 try:
     from RosNodes import RosNode
 except ImportError as e:
@@ -26,6 +28,7 @@ DEFAULT_SCENARIO = "scenarios/default.yaml"
 SIM_ENGINE = None
 LIDAR = None
 ROS_NODE = None
+COMM_NODE = None
 
 # Define a signal handler function
 def handleSigint(signalReceived, frame):
@@ -39,6 +42,9 @@ def handleSigint(signalReceived, frame):
     SIM_ENGINE.stop()
     LIDAR.stop()
 
+    if COMM_NODE:
+        COMM_NODE.stop()
+
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, handleSigint)
 
@@ -46,6 +52,7 @@ if __name__ == '__main__':
     parser.add_argument("--scenario", default=DEFAULT_SCENARIO, help="The default map to load")
     parser.add_argument("--graphics", action="store_true", help="Start Qt5 window")
     parser.add_argument("--ros", action="store_true", help="Start ROS nodes (requires sourced ros)")
+    parser.add_argument("--comm", action="store_true", help="Start CommNode")
     parser.add_argument("model", type=str, nargs='?', default=DEFAULT_MODEL,
                             help="Model of the vehicle")
 
@@ -78,13 +85,20 @@ if __name__ == '__main__':
 
     if args.ros:
         ROS_NODE = RosNode(vehicle, "vehicle1")
+
     #Lidar
     LIDAR = Lidar(SIM_ENGINE, vehicle, rosNode=ROS_NODE)
+
+    if args.comm:
+        COMM_NODE = VehicleNode("224.1.1.1", 5007, vehicle, LIDAR)
 
     SIM_ENGINE.startThreaded()
     if ROS_NODE:
         ROS_NODE.start()
     LIDAR.startThreaded()
+
+    if COMM_NODE:
+        COMM_NODE.start()
 
     if args.graphics:
         window.show()
@@ -93,3 +107,6 @@ if __name__ == '__main__':
     #Terminate
     LIDAR.wait()
     SIM_ENGINE.wait()
+
+    if COMM_NODE:
+        COMM_NODE.stop()

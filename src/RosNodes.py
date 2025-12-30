@@ -157,12 +157,13 @@ class TwistSubscriber(Node):
         msg.range_max = float('inf')
 
         msg.ranges = scan
+        print("Len:",len(scan))
         msg.intensities = []
 
         self.lidarPublisher.publish(msg)
 
     def timerCallback(self):
-        #self.publishPose()
+        self.publishPose()
         self.publishIcr()
         self.publishOdometry()
         self.broadcastTransform()

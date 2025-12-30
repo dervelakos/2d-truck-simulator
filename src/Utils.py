@@ -4,6 +4,14 @@ Common classes to be used by mutiliple modules
 
 import math
 
+class Point2D:
+    def __init__(self, x=None, y=None):
+        self.x = x
+        self.y = y
+
+    def isValid(self):
+        return self.x != None and self.y != None
+
 class Vector2D:
     """
     A class representing a two dimentional vector
