@@ -89,21 +89,21 @@ grid = Ocg(0.1)
 try:
     while True:
         # Receive Pose
-        #buffer = stream1.recv(28)
-        #msg = PoseMsg()
-        #msg.loadPose(buffer)
-        #msg.printPose()
+        buffer = stream1.recv(28)
+        msg = PoseMsg()
+        msg.loadPose(buffer)
+        msg.printPose()
 
         # Receive Lidar scan
         buffer = stream2.recv(2892)
-        msg = LidarMsg()
-        msg.loadScan(buffer)
+        msg1 = LidarMsg()
+        msg1.loadScan(buffer)
         #msg.printScan()
 
         #Forward Lidar scan
-        ros.publishLidar(msg)
+        ros.publishLidar(msg1)
 
-        grid.processScan(msg)
+        grid.processScan(msg1, msg)
         ros.publishOccupancyGrid(grid)
         print("Loop")
         #time.sleep(0.1)

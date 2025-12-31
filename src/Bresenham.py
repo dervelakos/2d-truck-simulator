@@ -22,8 +22,8 @@ def visualize_line_matplotlib(cells, margin=1):
     Visualize Bresenham output using matplotlib,
     with automatic grid sizing.
     """
-    xs_cells = [c[0] for c in cells]
-    ys_cells = [c[1] for c in cells]
+    xs_cells = [c.x for c in cells]
+    ys_cells = [c.y for c in cells]
 
     min_x = min(xs_cells) - margin
     max_x = max(xs_cells) + margin + 1
@@ -67,40 +67,42 @@ def visualize_line_matplotlib(cells, margin=1):
     plt.title("Bresenham vs Ideal Line (Auto Grid Size)")
     plt.show()
 
-def bresenham(x0, y0, x1, y1):
+def bresenham(p0: Point2D, p1: Point2D):
     """
     Enumerate all grid cells from (x0, y0) to (x1, y1) using Bresenham's line algorithm.
     
     Returns:
-        List of (x, y) grid coordinates along the line, including start and end.
+        List of Point2D(x, y) grid coordinates along the line, including start and end.
     """
     cells = []
 
-    dx = abs(x1 - x0)
-    dy = abs(y1 - y0)
-    sx = sign(x1 - x0)
-    sy = sign(y1 - y0)
+    dx = abs(p1.x - p0.x)
+    dy = abs(p1.y - p0.y)
+    sx = sign(p1.x - p0.x)
+    sy = sign(p1.y - p0.y)
+
+    p = p0.copy();
 
     if dx > dy:
         err = dx // 2
-        while x0 != x1:
-            cells.append((x0, y0))
+        while p.x != p1.x:
+            cells.append(p.copy())
             err -= dy
             if err < 0:
-                y0 += sy
+                p.y += sy
                 err += dx
-            x0 += sx
-        cells.append((x1, y1))
+            p.x += sx
+        cells.append(p.copy())
     else:
         err = dy // 2
-        while y0 != y1:
-            cells.append((x0, y0))
+        while p.y != p1.y:
+            cells.append(p.copy())
             err -= dx
             if err < 0:
-                x0 += sx
+                p.x += sx
                 err += dy
-            y0 += sy
-        cells.append((x1, y1))
+            p.y += sy
+        cells.append(p.copy())
 
     return cells
 
@@ -159,8 +161,9 @@ def run_bresenham_tests(bresenham_fn):
     all_passed = True
 
     for t in tests:
-        result = bresenham_fn(*t["start"], *t["end"])
-        ok = result == t["expected"]
+        result = bresenham_fn(Point2D(*t["start"]), Point2D(*t["end"]))
+        expected = [Point2D(*tup) for tup in t["expected"]]
+        ok = result == expected
         all_passed &= ok
 
         print(f"{t['name']}: {'PASS' if ok else 'FAIL'}")
@@ -174,14 +177,14 @@ def run_bresenham_tests(bresenham_fn):
 
 if __name__ == "__main__":
     # Example start and end cells (e.g., robot to LiDAR hit)
-    start_x, start_y = 2, 2
-    end_x, end_y = 9, 5
+    #start_x, start_y = 2, 2
+    #end_x, end_y = 9, 5
 
-    cells = bresenham(start_x, start_y, end_x, end_y)
+    #cells = bresenham(start_x, start_y, end_x, end_y)
 
-    print("Ray-traced cells, Expected:\n[(2,2) (3,2) (4,3) (5,3) (6,4) (7,4) (8,5) (9,5)]")
-    print("Result")
-    print(cells)
+    #print("Ray-traced cells, Expected:\n[(2,2) (3,2) (4,3) (5,3) (6,4) (7,4) (8,5) (9,5)]")
+    #print("Result")
+    #print(cells)
 
     run_bresenham_tests(bresenham)
 

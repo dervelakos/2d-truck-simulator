@@ -9,8 +9,29 @@ class Point2D:
         self.x = x
         self.y = y
 
+    def __sub__(self, other):
+        return Point2D(self.x - other.x, self.y - other.y)
+
     def isValid(self):
         return self.x != None and self.y != None
+
+    def copy(self):
+        return Point2D(self.x, self.y)
+
+    def __neg__(self):
+        return Point2D(-self.x, -self.y)
+
+    def __eq__(self, other):
+        if not isinstance(other, Point2D):
+            return False
+        return (round(self.x, 13) == round(other.x, 13) and
+               round(self.y, 13) == round(other.y, 13))
+
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+
+    def __repr__(self):
+        return f"({self.x}, {self.y})"
 
 class Vector2D:
     """

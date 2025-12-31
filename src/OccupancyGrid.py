@@ -3,7 +3,7 @@ import math
 
 from Bresenham import bresenham
 from Utils import Point2D
-from CommMsgs import LidarMsg
+from CommMsgs import PoseMsg, LidarMsg
 
 GRID_FREE = 0
 GRID_BLOCKED = 100
@@ -11,14 +11,6 @@ GRID_UNKNOWN = -1
 
 INITIAL_WIDTH = 2000
 INITIAL_HEIGHT = 2000
-
-class Point2D:
-    def __init__(self, x=None, y=None):
-        self.x = x
-        self.y = y
-
-    def isValid(self):
-        return self.x != None and self.y != None
 
 def polar_to_grid_cell(angle: float, distance: float, cell_size: float, origin: Point2D):
     """
@@ -34,8 +26,8 @@ def polar_to_grid_cell(angle: float, distance: float, cell_size: float, origin: 
     x = distance * math.cos(angle)
     y = distance * math.sin(angle)
 
-    cell_x = origin.x + int(x / cell_size)
-    cell_y = origin.y + int(y / cell_size)
+    cell_x = int(origin.x) + int(x / cell_size)
+    cell_y = int(origin.y) + int(y / cell_size)
 
     return Point2D(cell_x, cell_y)
 
@@ -100,7 +92,9 @@ class OccupancyGrid:
         self.grid = np.full((INITIAL_WIDTH, INITIAL_HEIGHT), GRID_UNKNOWN, dtype=int)
         self.width = INITIAL_WIDTH
         self.height = INITIAL_HEIGHT
-        self.grid_origin = (1000,1000)
+        self.grid_origin = Point2D(1000,1000)
+        self.initPose = None
+        self.deltaPoint = Point2D(0,0)
 
     def getWidth(self):
         #return self.width
@@ -117,7 +111,7 @@ class OccupancyGrid:
         return float(self.resolution)
 
     def getOrigin(self):
-        return -self.grid_origin[0]*self.resolution, -self.grid_origin[1]*self.resolution
+        return (-self.grid_origin.x+self.deltaPoint.x)*self.resolution, (-self.grid_origin.y+self.deltaPoint.y)*self.resolution
 
     def resize(self, pad):
         if all(p == 0 for pair in pad for p in pair):
@@ -131,24 +125,36 @@ class OccupancyGrid:
             constant_values = GRID_UNKNOWN
         )
 
-    def processScan(self, msg):
+    def processScan(self, msg, msg1):
         origin = Point2D(0, 0)
+
+        if self.initPose is None:
+            self.initPose = Point2D(int(msg1.position[1]*self.resolution), int(msg1.position[0]/self.resolution))
+
+        curr = Point2D(int(msg1.position[1]/self.resolution), int(msg1.position[0]/self.resolution))
+        deltaPoint = curr - self.initPose
+        print(curr, deltaPoint)
+        self.deltaPoint = deltaPoint
 
         angle = msg.angle_min
         for dist in msg.ranges:
-            cellPoint = polar_to_grid_cell(angle, dist, self.resolution, origin)
+            cellPoint = polar_to_grid_cell(angle, dist, self.resolution, -deltaPoint)
             if not cellPoint.isValid():
                 continue
             #print(dist, angle, cellPoint)
-            cells = bresenham(0, 0, cellPoint.x, cellPoint.y)
+            #cells = bresenham(origin, cellPoint)
+            #print("Bres:",deltaPoint, cellPoint)
+            cells = bresenham(-deltaPoint, cellPoint)
             #pad, need_pad, new_origin = compute_padding(self.grid.shape, self.grid_origin, cells)
             #print(cells)
             #print(self.grid.shape, pad, need_pad, new_origin)
             #if need_pad:
                 #self.resize(pad)
                 #self.grid_origin = new_origin
+            #print(cellPoint, self.grid_origin)
+            #print(cells)
             for cell in cells:
-                self.grid[cell[1]+self.grid_origin[1]][cell[0]+self.grid_origin[0]] = 0
-            self.grid[cellPoint.y+self.grid_origin[1]][cellPoint.x+self.grid_origin[1]] = GRID_BLOCKED
+                self.grid[cell.y+self.grid_origin.y][cell.x+self.grid_origin.x] = 0
+            self.grid[cellPoint.y+self.grid_origin.y][cellPoint.x+self.grid_origin.x] = GRID_BLOCKED
             angle += msg.angle_increment
         print(f"Shape:{self.grid.shape}, Orig:{self.grid_origin}")
