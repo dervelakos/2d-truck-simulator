@@ -3,11 +3,27 @@ Common classes to be used by mutiliple modules
 """
 
 import math
+import numpy as np
 
 class Point2D:
     def __init__(self, x=None, y=None):
-        self.x = x
-        self.y = y
+        self.dat = np.array([x, y, 1])
+
+    @property
+    def x(self):
+        return self.dat[0]
+
+    @x.setter
+    def x(self, value):
+        self.dat[0] = value
+
+    @property
+    def y(self):
+        return self.dat[1]
+
+    @y.setter
+    def y(self, value):
+        self.dat[1] = value
 
     def __sub__(self, other):
         return Point2D(self.x - other.x, self.y - other.y)

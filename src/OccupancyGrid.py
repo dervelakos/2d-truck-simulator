@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+from ExtendableGrid import ExtendableGrid
 from Bresenham import bresenham
 from Utils import Point2D
 from CommMsgs import PoseMsg, LidarMsg
@@ -21,7 +22,7 @@ def polar_to_grid_cell(angle: float, distance: float, cell_size: float, origin: 
     """
 
     if distance == float("inf"):
-        return Point2D()
+        return None
 
     x = distance * math.cos(angle)
     y = distance * math.sin(angle)
@@ -89,41 +90,25 @@ def compute_padding(grid_shape, origin, new_cells):
 class OccupancyGrid:
     def __init__(self, resolution):
         self.resolution = resolution
-        self.grid = np.full((INITIAL_WIDTH, INITIAL_HEIGHT), GRID_UNKNOWN, dtype=int)
-        self.width = INITIAL_WIDTH
-        self.height = INITIAL_HEIGHT
-        self.grid_origin = Point2D(1000,1000)
+        self.extGrid = ExtendableGrid(GRID_UNKNOWN);
         self.initPose = None
         self.deltaPoint = Point2D(0,0)
 
     def getWidth(self):
-        #return self.width
-        return self.grid.shape[1]
+        return self.extGrid.getWidth()
 
     def getHeight(self):
-        #return self.height
-        return self.grid.shape[0]
+        return self.extGrid.getHeight()
 
     def getData(self):
-        return self.grid.flatten(order="C").tolist()
+        return self.extGrid.getData()
 
     def getResolution(self):
         return float(self.resolution)
 
     def getOrigin(self):
-        return (-self.grid_origin.x+self.deltaPoint.x)*self.resolution, (-self.grid_origin.y+self.deltaPoint.y)*self.resolution
-
-    def resize(self, pad):
-        if all(p == 0 for pair in pad for p in pair):
-            return
-        #self.width += abs(pad_width[1][0]) + abs(pad_width[1][1])
-        #self.height += abs(pad_width[0][0]) + abs(pad_width[0][1])
-        self.grid = np.pad(
-            self.grid,
-            pad_width = pad,
-            mode = "constant",
-            constant_values = GRID_UNKNOWN
-        )
+        return ((self.deltaPoint.x - self.extGrid.xOffset)*self.resolution,
+               (self.deltaPoint.y - self.extGrid.yOffset)*self.resolution)
 
     def processScan(self, msg, msg1):
         origin = Point2D(0, 0)
@@ -139,7 +124,7 @@ class OccupancyGrid:
         angle = msg.angle_min
         for dist in msg.ranges:
             cellPoint = polar_to_grid_cell(angle, dist, self.resolution, -deltaPoint)
-            if not cellPoint.isValid():
+            if cellPoint is None:
                 continue
             #print(dist, angle, cellPoint)
             #cells = bresenham(origin, cellPoint)
@@ -154,7 +139,6 @@ class OccupancyGrid:
             #print(cellPoint, self.grid_origin)
             #print(cells)
             for cell in cells:
-                self.grid[cell.y+self.grid_origin.y][cell.x+self.grid_origin.x] = 0
-            self.grid[cellPoint.y+self.grid_origin.y][cellPoint.x+self.grid_origin.x] = GRID_BLOCKED
+                self.extGrid.setData(cell.x, cell.y, GRID_FREE);
+            self.extGrid.setData(cellPoint.x, cellPoint.y, GRID_BLOCKED);
             angle += msg.angle_increment
-        print(f"Shape:{self.grid.shape}, Orig:{self.grid_origin}")
